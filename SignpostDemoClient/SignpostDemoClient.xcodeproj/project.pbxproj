@@ -1,0 +1,343 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0C1785F815595AE600AF56B5 /* SharedCode.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C1785F715595AE500AF56B5 /* SharedCode.m */; };
+		0C3E391C1557E67F00BA33C3 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C3E391B1557E67F00BA33C3 /* Cocoa.framework */; };
+		0C3E39261557E67F00BA33C3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0C3E39241557E67F00BA33C3 /* InfoPlist.strings */; };
+		0C3E39281557E67F00BA33C3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C3E39271557E67F00BA33C3 /* main.m */; };
+		0C3E392C1557E67F00BA33C3 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 0C3E392A1557E67F00BA33C3 /* Credits.rtf */; };
+		0C3E392F1557E67F00BA33C3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C3E392E1557E67F00BA33C3 /* AppDelegate.m */; };
+		0C3E39321557E68000BA33C3 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0C3E39301557E68000BA33C3 /* MainMenu.xib */; };
+		0C3E39841557E6E500BA33C3 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C3E39831557E6E500BA33C3 /* GCDAsyncSocket.m */; };
+		0C3E398B1557E72000BA33C3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C3E398A1557E72000BA33C3 /* Security.framework */; };
+		0CB297EF1559261F00BF147F /* GCDAsyncUdpSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CB297EE1559261F00BF147F /* GCDAsyncUdpSocket.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0C1785F615595AE500AF56B5 /* SharedCode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SharedCode.h; path = ../../SignpostDemoServer/SignpostDemoServer/SharedCode.h; sourceTree = "<group>"; };
+		0C1785F715595AE500AF56B5 /* SharedCode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SharedCode.m; path = ../../SignpostDemoServer/SignpostDemoServer/SharedCode.m; sourceTree = "<group>"; };
+		0C3E39171557E67F00BA33C3 /* SignpostDemoClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignpostDemoClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0C3E391B1557E67F00BA33C3 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		0C3E391E1557E67F00BA33C3 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		0C3E391F1557E67F00BA33C3 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		0C3E39201557E67F00BA33C3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		0C3E39231557E67F00BA33C3 /* SignpostDemoClient-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SignpostDemoClient-Info.plist"; sourceTree = "<group>"; };
+		0C3E39251557E67F00BA33C3 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		0C3E39271557E67F00BA33C3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		0C3E39291557E67F00BA33C3 /* SignpostDemoClient-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SignpostDemoClient-Prefix.pch"; sourceTree = "<group>"; };
+		0C3E392B1557E67F00BA33C3 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		0C3E392D1557E67F00BA33C3 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		0C3E392E1557E67F00BA33C3 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		0C3E39311557E68000BA33C3 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		0C3E39821557E6E500BA33C3 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncSocket.h; sourceTree = "<group>"; };
+		0C3E39831557E6E500BA33C3 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncSocket.m; sourceTree = "<group>"; };
+		0C3E398A1557E72000BA33C3 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		0CB297ED1559261F00BF147F /* GCDAsyncUdpSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncUdpSocket.h; sourceTree = "<group>"; };
+		0CB297EE1559261F00BF147F /* GCDAsyncUdpSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncUdpSocket.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0C3E39141557E67F00BA33C3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0C3E398B1557E72000BA33C3 /* Security.framework in Frameworks */,
+				0C3E391C1557E67F00BA33C3 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0C3E390C1557E67F00BA33C3 = {
+			isa = PBXGroup;
+			children = (
+				0C3E39211557E67F00BA33C3 /* SignpostDemoClient */,
+				0C3E391A1557E67F00BA33C3 /* Frameworks */,
+				0C3E39181557E67F00BA33C3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		0C3E39181557E67F00BA33C3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0C3E39171557E67F00BA33C3 /* SignpostDemoClient.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0C3E391A1557E67F00BA33C3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0C3E398A1557E72000BA33C3 /* Security.framework */,
+				0C3E391B1557E67F00BA33C3 /* Cocoa.framework */,
+				0C3E391D1557E67F00BA33C3 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		0C3E391D1557E67F00BA33C3 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0C3E391E1557E67F00BA33C3 /* AppKit.framework */,
+				0C3E391F1557E67F00BA33C3 /* CoreData.framework */,
+				0C3E39201557E67F00BA33C3 /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		0C3E39211557E67F00BA33C3 /* SignpostDemoClient */ = {
+			isa = PBXGroup;
+			children = (
+				0C1785F615595AE500AF56B5 /* SharedCode.h */,
+				0C1785F715595AE500AF56B5 /* SharedCode.m */,
+				0CB297F21559263000BF147F /* Internet comms */,
+				0C3E392D1557E67F00BA33C3 /* AppDelegate.h */,
+				0C3E392E1557E67F00BA33C3 /* AppDelegate.m */,
+				0C3E39301557E68000BA33C3 /* MainMenu.xib */,
+				0C3E39221557E67F00BA33C3 /* Supporting Files */,
+			);
+			path = SignpostDemoClient;
+			sourceTree = "<group>";
+		};
+		0C3E39221557E67F00BA33C3 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				0C3E39231557E67F00BA33C3 /* SignpostDemoClient-Info.plist */,
+				0C3E39241557E67F00BA33C3 /* InfoPlist.strings */,
+				0C3E39271557E67F00BA33C3 /* main.m */,
+				0C3E39291557E67F00BA33C3 /* SignpostDemoClient-Prefix.pch */,
+				0C3E392A1557E67F00BA33C3 /* Credits.rtf */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		0CB297E5155923DE00BF147F /* TCP */ = {
+			isa = PBXGroup;
+			children = (
+				0C3E39821557E6E500BA33C3 /* GCDAsyncSocket.h */,
+				0C3E39831557E6E500BA33C3 /* GCDAsyncSocket.m */,
+			);
+			name = TCP;
+			sourceTree = "<group>";
+		};
+		0CB297F01559262300BF147F /* UDP */ = {
+			isa = PBXGroup;
+			children = (
+				0CB297ED1559261F00BF147F /* GCDAsyncUdpSocket.h */,
+				0CB297EE1559261F00BF147F /* GCDAsyncUdpSocket.m */,
+			);
+			name = UDP;
+			sourceTree = "<group>";
+		};
+		0CB297F21559263000BF147F /* Internet comms */ = {
+			isa = PBXGroup;
+			children = (
+				0CB297F01559262300BF147F /* UDP */,
+				0CB297E5155923DE00BF147F /* TCP */,
+			);
+			name = "Internet comms";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0C3E39161557E67F00BA33C3 /* SignpostDemoClient */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0C3E39351557E68000BA33C3 /* Build configuration list for PBXNativeTarget "SignpostDemoClient" */;
+			buildPhases = (
+				0C3E39131557E67F00BA33C3 /* Sources */,
+				0C3E39141557E67F00BA33C3 /* Frameworks */,
+				0C3E39151557E67F00BA33C3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SignpostDemoClient;
+			productName = SignpostDemoClient;
+			productReference = 0C3E39171557E67F00BA33C3 /* SignpostDemoClient.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0C3E390E1557E67F00BA33C3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+				ORGANIZATIONNAME = Kle.io;
+			};
+			buildConfigurationList = 0C3E39111557E67F00BA33C3 /* Build configuration list for PBXProject "SignpostDemoClient" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 0C3E390C1557E67F00BA33C3;
+			productRefGroup = 0C3E39181557E67F00BA33C3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0C3E39161557E67F00BA33C3 /* SignpostDemoClient */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0C3E39151557E67F00BA33C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0C3E39261557E67F00BA33C3 /* InfoPlist.strings in Resources */,
+				0C3E392C1557E67F00BA33C3 /* Credits.rtf in Resources */,
+				0C3E39321557E68000BA33C3 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0C3E39131557E67F00BA33C3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0C3E39281557E67F00BA33C3 /* main.m in Sources */,
+				0C3E392F1557E67F00BA33C3 /* AppDelegate.m in Sources */,
+				0C3E39841557E6E500BA33C3 /* GCDAsyncSocket.m in Sources */,
+				0CB297EF1559261F00BF147F /* GCDAsyncUdpSocket.m in Sources */,
+				0C1785F815595AE600AF56B5 /* SharedCode.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		0C3E39241557E67F00BA33C3 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0C3E39251557E67F00BA33C3 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		0C3E392A1557E67F00BA33C3 /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0C3E392B1557E67F00BA33C3 /* en */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+		0C3E39301557E68000BA33C3 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0C3E39311557E68000BA33C3 /* en */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0C3E39331557E68000BA33C3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		0C3E39341557E68000BA33C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		0C3E39361557E68000BA33C3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "SignpostDemoClient/SignpostDemoClient-Prefix.pch";
+				INFOPLIST_FILE = "SignpostDemoClient/SignpostDemoClient-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		0C3E39371557E68000BA33C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "SignpostDemoClient/SignpostDemoClient-Prefix.pch";
+				INFOPLIST_FILE = "SignpostDemoClient/SignpostDemoClient-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0C3E39111557E67F00BA33C3 /* Build configuration list for PBXProject "SignpostDemoClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0C3E39331557E68000BA33C3 /* Debug */,
+				0C3E39341557E68000BA33C3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0C3E39351557E68000BA33C3 /* Build configuration list for PBXNativeTarget "SignpostDemoClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0C3E39361557E68000BA33C3 /* Debug */,
+				0C3E39371557E68000BA33C3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0C3E390E1557E67F00BA33C3 /* Project object */;
+}
