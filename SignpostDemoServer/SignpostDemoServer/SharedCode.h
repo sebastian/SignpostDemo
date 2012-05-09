@@ -80,6 +80,10 @@ typedef enum {
 
 #define FORMAT(format, ...) [NSString stringWithFormat:(format), ##__VA_ARGS__]
 
+#define READ_TIMEOUT 15.0
+#define READ_TIMEOUT_EXTENSION 10.0
+
+
 @interface SharedCode : NSObject 
 {
   NSData *dataPayload;

@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:SignpostDemoiPhone/SignpostDemoiPhone.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:SignpostDemoServer/SignpostDemoServer.xcodeproj">
    </FileRef>
    <FileRef

@@ -112,12 +112,12 @@
 		0C3E394D1557E6AD00BA33C3 /* SignpostDemoServer */ = {
 			isa = PBXGroup;
 			children = (
+				0C1785F315595AC700AF56B5 /* SharedCode.h */,
+				0C1785F415595AC700AF56B5 /* SharedCode.m */,
 				0CB297F11559262900BF147F /* Internet comms */,
 				0C3E39851557E6F200BA33C3 /* SignpostDemoServerAppDelegate.h */,
 				0C3E39861557E6F200BA33C3 /* SignpostDemoServerAppDelegate.m */,
 				0C3E394E1557E6AD00BA33C3 /* Supporting Files */,
-				0C1785F315595AC700AF56B5 /* SharedCode.h */,
-				0C1785F415595AC700AF56B5 /* SharedCode.m */,
 			);
 			path = SignpostDemoServer;
 			sourceTree = "<group>";
