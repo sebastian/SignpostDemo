@@ -169,6 +169,7 @@
     [measurements addObject:[NSNumber numberWithFloat:measurement]];
     if ([measurements count] > JITTERMESSAGECOUNT)
     {
+      [measurements removeObjectAtIndex:0];
     }
     [jitterMeasurements setObject:measurements forKey:host];
   }
