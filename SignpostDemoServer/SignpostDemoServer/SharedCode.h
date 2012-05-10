@@ -74,10 +74,9 @@ typedef enum {
 #define DATASIZE 5120000
 
 // How many jitter messages to retain
-#define JITTERMESSAGECOUNT 60 // 1 minute, at 1 message per second
+#define JITTERMESSAGECOUNT 60 // slightly more than one second, given 50msg/s
 
-/*#define INTERVAL_BETWEEN_JITTER_MESSAGES 200000000; // in nanoseconds. i.e. 5 times per second. */
-#define INTERVAL_BETWEEN_JITTER_MESSAGES 20000000; // in nanoseconds. i.e. 5 times per second.
+#define INTERVAL_BETWEEN_JITTER_MESSAGES 20000000; // in nanoseconds. i.e. 50 times per second.
 
 #define FORMAT(format, ...) [NSString stringWithFormat:(format), ##__VA_ARGS__]
 
