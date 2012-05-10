@@ -15,7 +15,7 @@
 @synthesize hostname = _hostname;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Setup
+#pragma mark - Setup
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (id)init 
@@ -28,13 +28,15 @@
     startTimeLatency = nil;
     latency = 0.0;
     jitterMeasurements = [[NSMutableDictionary alloc] init];
+    jitterCache = [[NSMutableDictionary alloc] init];
+    jitterCalcQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0);
   }
   return self;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Latency related functionality
+#pragma mark - Latency related functionality
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)startLatencyMeasurement {
@@ -52,7 +54,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Bandwidth related functionality
+#pragma mark - Bandwidth related functionality
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)startBandwidthMeasurement
@@ -72,7 +74,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Encoding and decoding data for the wire
+#pragma mark - Encoding and decoding data for the wire
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (NSData *) dataPayload 
@@ -142,7 +144,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Jitter measurements
+#pragma mark - Jitter measurements
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (NSNumber *)meanOf:(NSArray *)array
@@ -168,21 +170,25 @@
     [measurements removeLastObject];
   }
   [jitterMeasurements setObject:measurements forKey:host];
+  
+  // Calculate the jitter
+  dispatch_async(jitterCalcQueue, ^{
+    double mean = [[self meanOf:measurements] doubleValue];
+    double sumOfSquaredDifferences = 0.0;
+    for(NSNumber *number in measurements)
+    {
+      double valueOfNumber = [number doubleValue];
+      double difference = valueOfNumber - mean;
+      sumOfSquaredDifferences += difference * difference;
+    }
+    NSNumber *currentJitter = [NSNumber numberWithDouble:(sumOfSquaredDifferences / [measurements count])];
+    [jitterCache setValue:currentJitter forKey:host];
+  });
 }
 
 - (NSNumber *)currentJitterForHost:(NSString *)host
 {
-  NSMutableArray *measurements = [jitterMeasurements objectForKey:host];
-  if(![measurements count]) return nil;
-  double mean = [[self meanOf:measurements] doubleValue];
-  double sumOfSquaredDifferences = 0.0;
-  for(NSNumber *number in measurements)
-  {
-    double valueOfNumber = [number doubleValue];
-    double difference = valueOfNumber - mean;
-    sumOfSquaredDifferences += difference * difference;
-  }
-  return [NSNumber numberWithDouble:(sumOfSquaredDifferences / [measurements count])];
+  return (NSNumber *) [jitterCache valueForKey:host];
 }
 
 - (void)performJitterMeasurements:(NSDictionary*)infoDict {

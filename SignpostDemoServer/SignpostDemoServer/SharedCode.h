@@ -71,7 +71,7 @@ typedef enum {
 } Messages;
 
 // We are sending 500 kbytes
-#define DATASIZE 512000
+#define DATASIZE 5120000
 
 // How many jitter messages to retain
 #define JITTERMESSAGECOUNT 60 // 1 minute, at 1 message per second
@@ -80,8 +80,8 @@ typedef enum {
 
 #define FORMAT(format, ...) [NSString stringWithFormat:(format), ##__VA_ARGS__]
 
-#define READ_TIMEOUT 15.0
-#define READ_TIMEOUT_EXTENSION 10.0
+#define READ_TIMEOUT 150.0
+#define READ_TIMEOUT_EXTENSION 100.0
 
 
 @interface SharedCode : NSObject 
@@ -91,6 +91,9 @@ typedef enum {
   NSDate *startTimeLatency;
   
   NSMutableDictionary *jitterMeasurements;
+  NSMutableDictionary *jitterCache;
+  
+  dispatch_queue_t jitterCalcQueue;
   
   double latency;
 }

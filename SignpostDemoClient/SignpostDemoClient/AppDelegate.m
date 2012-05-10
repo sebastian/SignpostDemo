@@ -11,12 +11,6 @@
 #import "GCDAsyncUdpSocket.h"
 #import "SharedCode.h"
 
-#define READ_TIMEOUT 15.0
-#define READ_TIMEOUT_EXTENSION 10.0
-
-#define FORMAT(format, ...) [NSString stringWithFormat:(format), ##__VA_ARGS__]
-
-
 @implementation AppDelegate
 
 @synthesize window = _window;
