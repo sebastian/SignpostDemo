@@ -30,6 +30,12 @@
   NSUInteger serverJitterPort;
   NSMutableArray *interarrivalTimesOfJitterMessages;
   NSDate *lastReceivedMessage;
+  
+  // The jitter seen by the server
+  double serverJitter;
+  NSString *serverhost;
+  
+  NSInteger receivedPacketCounter;
 }
 
 @property (assign) IBOutlet NSWindow *window;

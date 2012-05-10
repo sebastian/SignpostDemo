@@ -31,6 +31,9 @@
   NSUInteger serverJitterPort;
   NSMutableArray *interarrivalTimesOfJitterMessages;
   NSDate *lastReceivedMessage;  
+  
+  double serverJitter;
+  NSString *jitterHost;
 }
 
 @property (assign) IBOutlet UIButton *connectButton;

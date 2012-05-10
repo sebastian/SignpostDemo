@@ -164,6 +164,25 @@
 	[[self.statusView textStorage] appendAttributedString:as];
 }
 
+- (void)updateJitterLabel {
+  @autoreleasepool 
+  {
+    struct timespec a;
+    NSInteger val = 400000000;
+    a.tv_nsec = val;
+    a.tv_sec = 0;
+    
+
+    while ([socket isConnected])
+    {
+      nanosleep(&a, NULL);
+      NSLog(@"Updating jitter");
+      double localJitter = [[commonFunc currentJitterForHost:serverhost] doubleValue];
+      [self.jitterLabel setStringValue:[NSString stringWithFormat:@"seen locally: %fms, seen on server: %fms", localJitter, serverJitter]];      
+    }
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - GCDAsyncSocket delegate methods
@@ -190,7 +209,8 @@
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port {
   [self logInfo:FORMAT(@"Connected to %@:%i", host, port)];
-
+  [self performSelectorInBackground:@selector(updateJitterLabel) withObject:nil];
+  
   commonFunc.hostname = FORMAT(@"%@:%i", [sock localHost], [sock localPort]);
   
   // Tell the other end that we want to start jitter measurements on the port we are listening to.
@@ -318,11 +338,9 @@
                                          withFilterContext:(id)filterContext 
 {
   double timeDiff = [SharedCode msFromTimestampData:data];
-  NSString *host = [SharedCode hostFromData:data];
-  [commonFunc addJitterMeasurement:timeDiff forHost:host];
-  double localJitter = [[commonFunc currentJitterForHost:host] doubleValue];
-  double serverJitter = [[SharedCode hostJitterFromData:data] doubleValue];
-  [self.jitterLabel setStringValue:[NSString stringWithFormat:@"seen locally: %fms, seen on server: %fms", localJitter, serverJitter]];
+  serverhost = [SharedCode hostFromData:data];
+  [commonFunc addJitterMeasurement:timeDiff forHost:serverhost];
+  serverJitter = [[SharedCode hostJitterFromData:data] doubleValue];
 }
 
 @end

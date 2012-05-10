@@ -159,30 +159,36 @@
 
 - (void)addJitterMeasurement:(double)measurement forHost:(NSString*)host
 {
-  NSMutableArray *measurements = [jitterMeasurements objectForKey:host];
-  if (measurements == nil) 
+  @synchronized(jitterMeasurements)
   {
-    measurements = [[NSMutableArray alloc] init];
+    NSMutableArray *measurements = [jitterMeasurements objectForKey:host];
+    if (measurements == nil) 
+    {
+      measurements = [[NSMutableArray alloc] init];
+    }
+    [measurements addObject:[NSNumber numberWithFloat:measurement]];
+    if ([measurements count] > JITTERMESSAGECOUNT)
+    {
+    }
+    [jitterMeasurements setObject:measurements forKey:host];
   }
-  [measurements addObject:[NSNumber numberWithFloat:measurement]];
-  if ([measurements count] > JITTERMESSAGECOUNT)
-  {
-    [measurements removeLastObject];
-  }
-  [jitterMeasurements setObject:measurements forKey:host];
   
   // Calculate the jitter
   dispatch_async(jitterCalcQueue, ^{
-    double mean = [[self meanOf:measurements] doubleValue];
-    double sumOfSquaredDifferences = 0.0;
-    for(NSNumber *number in measurements)
+    @synchronized(jitterMeasurements)
     {
-      double valueOfNumber = [number doubleValue];
-      double difference = valueOfNumber - mean;
-      sumOfSquaredDifferences += difference * difference;
+      NSMutableArray *measurements = [jitterMeasurements objectForKey:host];
+      double mean = [[self meanOf:measurements] doubleValue];
+      double sumOfSquaredDifferences = 0.0;
+      for(NSNumber *number in measurements)
+      {
+        double valueOfNumber = [number doubleValue];
+        double difference = valueOfNumber - mean;
+        sumOfSquaredDifferences += difference * difference;
+      }
+      NSNumber *currentJitter = [NSNumber numberWithDouble:(sumOfSquaredDifferences / [measurements count])];
+      [jitterCache setValue:currentJitter forKey:host];
     }
-    NSNumber *currentJitter = [NSNumber numberWithDouble:(sumOfSquaredDifferences / [measurements count])];
-    [jitterCache setValue:currentJitter forKey:host];
   });
 }
 

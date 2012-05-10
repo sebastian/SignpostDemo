@@ -159,6 +159,28 @@
   [socket readDataToLength:4 withTimeout:READ_TIMEOUT tag:PANG];
 }
 
+- (void) updateJitterDisplay
+{
+  @autoreleasepool 
+  {
+    struct timespec a;
+    NSInteger val = 400000000;
+    a.tv_nsec = val;
+    a.tv_sec = 0;
+    
+    while ([socket isConnected])
+    {
+      nanosleep(&a, NULL);
+      double localJitter = [[commonFunc currentJitterForHost:jitterHost] doubleValue];
+      dispatch_async(dispatch_get_main_queue(), ^{
+        @autoreleasepool {
+          self.jitterLabel.text = [NSString stringWithFormat:@"seen locally: %fms, seen on server: %fms", localJitter, serverJitter];
+        }
+      });
+      [self.jitterLabel setNeedsLayout];
+    }
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - GCDAsyncSocket delegate methods
@@ -185,6 +207,8 @@
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port {
   NSLog(@"Connected to %@:%i", host, port);
+  
+  [self performSelectorInBackground:@selector(updateJitterDisplay) withObject:nil];
   
   commonFunc.hostname = FORMAT(@"%@:%i", [sock localHost], [sock localPort]);
   
@@ -313,11 +337,9 @@
 withFilterContext:(id)filterContext 
 {
   double timeDiff = [SharedCode msFromTimestampData:data];
-  NSString *host = [SharedCode hostFromData:data];
-  [commonFunc addJitterMeasurement:timeDiff forHost:host];
-  double localJitter = [[commonFunc currentJitterForHost:host] doubleValue];
-  double serverJitter = [[SharedCode hostJitterFromData:data] doubleValue];
-  self.jitterLabel.text = [NSString stringWithFormat:@"seen locally: %fms, seen on server: %fms", localJitter, serverJitter];
+  jitterHost = [SharedCode hostFromData:data];
+  [commonFunc addJitterMeasurement:timeDiff forHost:jitterHost];
+  serverJitter = [[SharedCode hostJitterFromData:data] doubleValue];
 }
 
 
