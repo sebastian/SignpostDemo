@@ -12,6 +12,8 @@
 #import "GCDAsyncUdpSocket.h"
 #import "SharedCode.h"
 
+#import "Meter.h"
+
 @interface ViewController ()
 
 @end
@@ -50,6 +52,9 @@
 - (void)viewDidLoad
 {
   [super viewDidLoad];
+  
+  meter = [[Meter alloc] init];
+  [self.view addSubview:meter.view];
 }
 
 - (void)viewDidUnload
@@ -66,6 +71,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - IBActions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (IBAction)rotateNeedle:(id)sender
+{
+  [meter setNeedleSpinning:sender];
+}
 
 - (IBAction)connectToHostButtonClicked:(id)sender 
 {

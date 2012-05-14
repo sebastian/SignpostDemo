@@ -122,10 +122,8 @@
 
 - (void) startPingPangPongData 
 {
-  NSString *ping = @"ping";
-  NSData *data = [ping dataUsingEncoding:NSUTF8StringEncoding];
-  [socket writeData:data withTimeout:-1 tag:PING];
-  [socket readDataToLength:4 withTimeout:READ_TIMEOUT tag:PANG];
+  [socket writeData:[SharedCode payloadForString:@"ping"] withTimeout:-1 tag:PING];
+  [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:PANG];
 }
 
 - (void)logError:(NSString *)msg
@@ -176,7 +174,7 @@
     while ([socket isConnected])
     {
       nanosleep(&a, NULL);
-      NSLog(@"Updating jitter");
+//      NSLog(@"Updating jitter");
       double localJitter = [[commonFunc currentJitterForHost:serverhost] doubleValue];
       [self.jitterLabel setStringValue:[NSString stringWithFormat:@"seen locally: %fms, seen on server: %fms", localJitter, serverJitter]];      
     }
@@ -214,9 +212,7 @@
   commonFunc.hostname = FORMAT(@"%@:%i", [sock localHost], [sock localPort]);
   
   // Tell the other end that we want to start jitter measurements on the port we are listening to.
-  NSString *connString = FORMAT(@"%i\r\n", [jitterSocket localPort]);
-  NSData *portData = [connString dataUsingEncoding:NSUTF8StringEncoding];
-  [socket writeData:portData withTimeout:-1 tag:CLIENTJITTERPORT];
+  [socket writeData:[SharedCode intToData:[jitterSocket localPort]] withTimeout:-1 tag:CLIENTJITTERPORT];
   NSLog(@"Write clientjitterport in didConnectToHost: %@:%i", host, port);
 }
 
@@ -224,23 +220,27 @@
   switch (tag) {
     case PING:
       [commonFunc startLatencyMeasurement];
+      NSLog(@"Sent ping");
       break;
       
     case PONG:
       [commonFunc startBandwidthMeasurement];
+      NSLog(@"Sent pong");
       break;
     
     case DOWNSTREAM_BW:
       // We sent the downstream bandwidth number to the server
+      NSLog(@"Sent downstream bandwidth");
       break;
     
     case DATAFROMCLIENT:
       // We sent the data payload to measure upstream bandwidth
+      NSLog(@"Sent data from client");
       break;
 
     case CLIENTJITTERPORT:
       [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:SERVERJITTERPORT];
-      NSLog(@"Registered to read SERVERJITTERPORT after sending clientjitterport");
+      NSLog(@"Registered to read SERVERJITTERPORT after sending CLIENTJITTERPORT");
       // We told the server which port we are listening on.
       break;
       
@@ -254,31 +254,39 @@
     case PANG:
     {
       [commonFunc concludeLatencyMeasurement];
-      double latency = [commonFunc latency];
+      clientLatency = [commonFunc latency];
+     
+      NSInteger clientLatencyInMicroseconds = clientLatency * 1000;
+      [socket writeData:[SharedCode intToData:clientLatencyInMicroseconds] withTimeout:-1 tag:PONG];
       
-      NSData *data = [SharedCode payloadForString:@"pong"];
-      [socket writeData:data withTimeout:-1 tag:PONG];
-      [socket readDataToLength:DATASIZE withTimeout:READ_TIMEOUT tag:DATAFROMSERVER];
+      // The server sent us how many bytes to expect.
+      NSInteger numBytesToExpect = [SharedCode dataToInt:data];
+      [commonFunc setNumberOfBytesForDataMeasurements:numBytesToExpect];
+      [socket readDataToLength:numBytesToExpect withTimeout:READ_TIMEOUT tag:DATAFROMSERVER];
 
       NSLog(@"Received pang, sent pong, waiting for datafromserver");
       
       dispatch_async(dispatch_get_main_queue(), ^{
-        @autoreleasepool {[self logInfo:FORMAT(@"Latency: %fms", latency)];}
+        @autoreleasepool {[self logInfo:FORMAT(@"Latency: %fms", clientLatency)];}
       });
       break;
     } 
 
     case DATAFROMSERVER: 
     {
-      NSInteger mbitsPerSecond = [commonFunc getBandwidthInMegabitsPerSecond];
-      NSData *data = [SharedCode intToData:mbitsPerSecond];
+      double mbitsPerSecond = [commonFunc getBandwidthInMegabitsPerSecond];
+      NSInteger downstreamBandwidthInKb = mbitsPerSecond * 1000;
+      NSData *data = [SharedCode intToData:downstreamBandwidthInKb];
       [socket writeData:data withTimeout:-1 tag:DOWNSTREAM_BW];
-      [socket readDataToLength:4 withTimeout:READ_TIMEOUT tag:PENG];
+      [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:PENG];
       
       NSLog(@"Received datafromserver, sent downstream_bw, waiting for peng");
       
       dispatch_async(dispatch_get_main_queue(), ^{
-        @autoreleasepool {[self logInfo:FORMAT(@"Downstream bandwidth: %i", mbitsPerSecond)];}
+        @autoreleasepool 
+        {
+          [self logInfo:FORMAT(@"Downstream bandwidth: %f", mbitsPerSecond)];
+        }
       });
       break;
     }
@@ -288,15 +296,25 @@
       // The server now wants us to send data back.
       [socket writeData:[commonFunc dataPayload] withTimeout:-1 tag:DATAFROMCLIENT];
       [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:UPSTREAM_BW];
+      
+      serverLatency = (double) [SharedCode dataToInt:data] / 1000.0;
+      dispatch_async(dispatch_get_main_queue(), ^{
+        @autoreleasepool 
+        {
+          [self logInfo:FORMAT(@"Server latency: %f", serverLatency)];
+        }
+      });
+      
       NSLog(@"Received peng, sent datafromclient, waiting for upstrambw");
       break;
     }
 
     case UPSTREAM_BW:
     {
-      NSInteger upstreamBandwith = [SharedCode dataToInt:data];
+      NSInteger upstreamBandwidthInKbit = [SharedCode dataToInt:data];
+      double upstreamBandwidth = (double) upstreamBandwidthInKbit / 1000.0;
       dispatch_async(dispatch_get_main_queue(), ^{
-        @autoreleasepool {[self logInfo:FORMAT(@"Upstream bandwidth: %i", upstreamBandwith)];}
+        @autoreleasepool {[self logInfo:FORMAT(@"Upstream bandwidth: %f", upstreamBandwidth)];}
       });
       NSLog(@"Received upstream_bw, did nothing in return");
       break;

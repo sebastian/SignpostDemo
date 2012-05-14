@@ -11,6 +11,7 @@
 @class GCDAsyncSocket;
 @class GCDAsyncUdpSocket;
 @class SharedCode;
+@class Meter;
 
 @interface ViewController : UIViewController <UITextFieldDelegate>
 {
@@ -34,6 +35,8 @@
   
   double serverJitter;
   NSString *jitterHost;
+  
+  Meter *meter;
 }
 
 @property (assign) IBOutlet UIButton *connectButton;
@@ -43,5 +46,5 @@
 
 - (IBAction)connectToHostButtonClicked:(id)sender;
 - (IBAction)runPingPangPongData:(id)sender;
-
+- (IBAction)rotateNeedle:(id)sender;
 @end

@@ -34,6 +34,9 @@
   // The jitter seen by the server
   double serverJitter;
   NSString *serverhost;
+  
+  double clientLatency;
+  double serverLatency;
 }
 
 @property (assign) IBOutlet NSWindow *window;

@@ -26,10 +26,14 @@
 
   // Code for common functionality... nasty design.
   SharedCode *commFunc;
+  
+  double serverLatency;
+  double clientLatency;
 }
 
 @property (assign) IBOutlet NSWindow *window;
 @property (assign) IBOutlet NSTextField *port;
+@property (assign) IBOutlet NSTextField *numBytes;
 @property (assign) IBOutlet NSTextView *statusMessages;
 @property (assign) IBOutlet NSButton *startStopButton;
 @property (assign) IBOutlet NSTextField *jitterLabel;

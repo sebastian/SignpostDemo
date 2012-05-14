@@ -20,6 +20,7 @@
 		0C465302155AB64B004A8398 /* SharedCode.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C465301155AB64B004A8398 /* SharedCode.m */; };
 		0C465308155AB946004A8398 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C465307155AB946004A8398 /* Security.framework */; };
 		0C465318155AB9FA004A8398 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C465317155AB9FA004A8398 /* CFNetwork.framework */; };
+		0CB0858F155D6AC700986CF7 /* Meter.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CB0858E155D6AC700986CF7 /* Meter.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,8 @@
 		0C465301155AB64B004A8398 /* SharedCode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SharedCode.m; path = ../../SignpostDemoServer/SignpostDemoServer/SharedCode.m; sourceTree = "<group>"; };
 		0C465307155AB946004A8398 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		0C465317155AB9FA004A8398 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
+		0CB0858D155D6AC700986CF7 /* Meter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Meter.h; sourceTree = "<group>"; };
+		0CB0858E155D6AC700986CF7 /* Meter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Meter.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +97,7 @@
 		0C4652DE155AB32B004A8398 /* SignpostDemoiPhone */ = {
 			isa = PBXGroup;
 			children = (
+				0CB0858B155D6AAC00986CF7 /* Meter */,
 				0C465300155AB64B004A8398 /* SharedCode.h */,
 				0C465301155AB64B004A8398 /* SharedCode.m */,
 				0C4652FB155AB379004A8398 /* Networking code */,
@@ -127,6 +131,15 @@
 				0C4652F8155AB374004A8398 /* GCDAsyncUdpSocket.m */,
 			);
 			name = "Networking code";
+			sourceTree = "<group>";
+		};
+		0CB0858B155D6AAC00986CF7 /* Meter */ = {
+			isa = PBXGroup;
+			children = (
+				0CB0858D155D6AC700986CF7 /* Meter.h */,
+				0CB0858E155D6AC700986CF7 /* Meter.m */,
+			);
+			name = Meter;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -198,6 +211,7 @@
 				0C4652F9155AB374004A8398 /* GCDAsyncSocket.m in Sources */,
 				0C4652FA155AB374004A8398 /* GCDAsyncUdpSocket.m in Sources */,
 				0C465302155AB64B004A8398 /* SharedCode.m in Sources */,
+				0CB0858F155D6AC700986CF7 /* Meter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,6 +323,7 @@
 				0C4652F4155AB32B004A8398 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

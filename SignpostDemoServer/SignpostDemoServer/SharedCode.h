@@ -70,9 +70,6 @@ typedef enum {
   JITTERMESSAGE
 } Messages;
 
-// We are sending 500 kbytes
-#define DATASIZE 5120000
-
 // How many jitter messages to retain
 #define JITTERMESSAGECOUNT 60 // slightly more than one second, given 50msg/s
 
@@ -96,11 +93,18 @@ typedef enum {
   dispatch_queue_t jitterCalcQueue;
   
   double latency;
+  NSInteger numBytesForData;
 }
 
 @property (nonatomic, retain) NSString *hostname;
 
 - (id)init;
+
+// For changing amount of data to use for
+// goodput measurement
+- (void)setNumberOfBytesForDataMeasurements:(NSInteger)numKBytes;
+- (NSInteger)numBytesToReadForData;
+
 
 // Latency related functionality
 - (void)startLatencyMeasurement;
@@ -110,7 +114,7 @@ typedef enum {
 
 // Bandwidth related functionality
 - (void)startBandwidthMeasurement;
-- (NSInteger) getBandwidthInMegabitsPerSecond;
+- (double) getBandwidthInMegabitsPerSecond;
 
 
 // Data handling and conversion related functionality

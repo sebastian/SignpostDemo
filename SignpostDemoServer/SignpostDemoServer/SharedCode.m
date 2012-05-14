@@ -30,8 +30,32 @@
     jitterMeasurements = [[NSMutableDictionary alloc] init];
     jitterCache = [[NSMutableDictionary alloc] init];
     jitterCalcQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0);
+    numBytesForData = 1000000;
   }
   return self;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - Latency related functionality
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)setNumberOfBytesForDataMeasurements:(NSInteger)numBytes
+{
+  NSLog(@"Setting num of bytes to use to be: %ld", numBytes);
+  if (numBytesForData != numBytes)
+  {
+    NSLog(@"This required a byte adjustment. The data cache is removed");
+    // The amount of data to send/expect has changed.
+    numBytesForData = numBytes;
+    // Reset the data payload so the right one is used the next time.
+    dataPayload = nil;
+  }
+}
+
+- (NSInteger)numBytesToReadForData
+{
+  return numBytesForData;
 }
 
 
@@ -62,11 +86,11 @@
   startTimeBandwidth = [NSDate date];
 }
 
-- (NSInteger) getBandwidthInMegabitsPerSecond
+- (double) getBandwidthInMegabitsPerSecond
 {
   double transmissionTime = [startTimeBandwidth timeIntervalSinceNow] * (-1000.0) - (2 * latency); // in ms
   double numPerSecond = (1 / transmissionTime) * 1000;
-  double bytesPerSecond = numPerSecond * DATASIZE;
+  double bytesPerSecond = numPerSecond * numBytesForData;
   NSUInteger bytesPerMegabit = 131072.0;
   double mbitPerSecond = bytesPerSecond / bytesPerMegabit;        
   return mbitPerSecond;
@@ -82,8 +106,8 @@
   if (dataPayload == nil)
   {
     // Set the data values
-    NSMutableString * tempString = [NSMutableString stringWithCapacity:DATASIZE];
-    for (int i = 0; i < (DATASIZE / 10); i++) {
+    NSMutableString * tempString = [NSMutableString stringWithCapacity:numBytesForData];
+    for (int i = 0; i < (numBytesForData / 10); i++) {
       [tempString appendString:@"abcdefghij"];
     }
     dataPayload = [tempString dataUsingEncoding:NSUTF8StringEncoding];  
@@ -100,12 +124,13 @@
 + (NSInteger) dataToInt:(NSData *)data 
 {
   NSString *stringData = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-  return [stringData integerValue];
+  NSInteger integerValue = [stringData integerValue];
+  return integerValue;
 }
 
 + (NSData *) payloadForString:(NSString *)stringVal
 {
-  return [stringVal dataUsingEncoding:NSUTF8StringEncoding];  
+  return [[stringVal stringByAppendingFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding];  
 }
 
 // This method takes a host and a port. The host and port serve to provide 
