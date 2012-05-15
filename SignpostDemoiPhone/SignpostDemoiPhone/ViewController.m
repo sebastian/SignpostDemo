@@ -45,7 +45,8 @@
     isConnected = NO;
     
     commonFunc = [[SharedCode alloc] init];    
-
+    
+    averageJitter = 0.0;
   }
   return self;
 }
@@ -54,8 +55,11 @@
 {
   [super viewDidLoad];
   
-  // meter = [[Meter alloc] init];
-  // [self.view addSubview:/.view];
+  meter = [[Meter alloc] init];
+  CGRect meterFrame = CGRectMake(0, 200, 200, 200);
+  meter.view.frame = meterFrame;
+  [self.view addSubview:meter.view];
+  [meter setMaxValue:300.0];
 }
 
 - (void)viewDidUnload
@@ -75,7 +79,18 @@
 
 - (IBAction)rotateNeedle:(id)sender
 {
-  [meter setNeedleSpinning:sender];
+  __unsafe_unretained Meter *m = meter;
+  [meter setCurrentValue:40 withCallback:^{
+    __unsafe_unretained Meter *m2 = m;
+    [m setCurrentValue:0 withCallback:^{
+      __unsafe_unretained Meter *m3 = m2;      
+      [m2 setCurrentValue:100 withCallback:^{
+        [m3 setCurrentValue:50 withCallback:^{
+          NSLog(@"Round complete");
+        }];
+      }];
+    }];
+  }];
 }
 
 - (IBAction)connectToHostButtonClicked:(id)sender 
@@ -173,10 +188,10 @@
   @autoreleasepool 
   {
     struct timespec a;
-    NSInteger val = 400000000;
+    NSInteger val = 40000000;
     a.tv_nsec = val;
     a.tv_sec = 0;
-    
+        
     while ([socket isConnected])
     {
       nanosleep(&a, NULL);
@@ -184,12 +199,14 @@
       dispatch_async(dispatch_get_main_queue(), ^{
         @autoreleasepool {
           self.jitterLabel.text = [NSString stringWithFormat:@"seen locally: %fms, seen on server: %fms", localJitter, serverJitter];
+          [meter setCurrentValue:averageJitter withCallback:^{}];
         }
       });
       [self.jitterLabel setNeedsLayout];
     }
   }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - GCDAsyncSocket delegate methods
@@ -355,6 +372,8 @@ withFilterContext:(id)filterContext
   jitterHost = [SharedCode hostFromData:data];
   [commonFunc addJitterMeasurement:timeDiff forHost:jitterHost];
   serverJitter = [[SharedCode hostJitterFromData:data] doubleValue];
+  double clientJitter = [[commonFunc currentJitterForHost:jitterHost] doubleValue];
+  averageJitter = (serverJitter + clientJitter) / 2.0;
 }
 
 

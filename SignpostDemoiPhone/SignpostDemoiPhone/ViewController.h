@@ -34,6 +34,7 @@
   NSDate *lastReceivedMessage;  
   
   double serverJitter;
+  double averageJitter;
   NSString *jitterHost;
   
   Meter *meter;

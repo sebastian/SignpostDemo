@@ -7,12 +7,33 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <QuartzCore/QuartzCore.h>
 
-@interface Meter : UIViewController
+@protocol MeterDelegate;
+
+
+@interface Meter : UIViewController <UIAccelerometerDelegate>
 {
-  UIView *outerNeedleLayer, *innerNeedleLayer;
+  UIView *needleView;
+  UIView *accelerationResultView;
+  CGFloat maxValue;
+  
+  NSMutableArray *previousMeasurements;
+  
+  CGFloat currentEndDegreeValueOfNeedle;
+  BOOL currentlyAnimatingAcceleration;
 }
 
-- (void) setNeedleSpinning:(id)sender;
+@property (nonatomic, assign) id<MeterDelegate> delegate;
+@property (nonatomic, retain) UIAccelerometer *accelerometer;
 
+- (void)setMaxValue:(CGFloat)maxValue;
+- (void)setCurrentValue:(CGFloat)currentValue;
+- (void)setCurrentValue:(CGFloat)currentValue withCallback:(void (^)())callback;
+
+@end
+
+
+@protocol MeterDelegate
+- (void)meterFinishedTransition:(Meter *)meter;
 @end

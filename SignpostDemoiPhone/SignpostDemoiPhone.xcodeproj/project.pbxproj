@@ -21,6 +21,7 @@
 		0C465308155AB946004A8398 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C465307155AB946004A8398 /* Security.framework */; };
 		0C465318155AB9FA004A8398 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C465317155AB9FA004A8398 /* CFNetwork.framework */; };
 		0CB0858F155D6AC700986CF7 /* Meter.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CB0858E155D6AC700986CF7 /* Meter.m */; };
+		0CB977221562962300512752 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CB977211562962300512752 /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +48,7 @@
 		0C465317155AB9FA004A8398 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		0CB0858D155D6AC700986CF7 /* Meter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Meter.h; sourceTree = "<group>"; };
 		0CB0858E155D6AC700986CF7 /* Meter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Meter.m; sourceTree = "<group>"; };
+		0CB977211562962300512752 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CB977221562962300512752 /* QuartzCore.framework in Frameworks */,
 				0C465318155AB9FA004A8398 /* CFNetwork.framework in Frameworks */,
 				0C465308155AB946004A8398 /* Security.framework in Frameworks */,
 				0C4652D9155AB32B004A8398 /* UIKit.framework in Frameworks */,
@@ -85,6 +88,7 @@
 		0C4652D7155AB32B004A8398 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0CB977211562962300512752 /* QuartzCore.framework */,
 				0C465317155AB9FA004A8398 /* CFNetwork.framework */,
 				0C465307155AB946004A8398 /* Security.framework */,
 				0C4652D8155AB32B004A8398 /* UIKit.framework */,
