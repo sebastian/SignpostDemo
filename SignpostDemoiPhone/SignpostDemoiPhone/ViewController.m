@@ -45,6 +45,7 @@
     isConnected = NO;
     
     commonFunc = [[SharedCode alloc] init];    
+
   }
   return self;
 }
@@ -53,8 +54,8 @@
 {
   [super viewDidLoad];
   
-  meter = [[Meter alloc] init];
-  [self.view addSubview:meter.view];
+  // meter = [[Meter alloc] init];
+  // [self.view addSubview:/.view];
 }
 
 - (void)viewDidUnload
@@ -163,10 +164,8 @@
 
 - (void) startPingPangPongData 
 {
-  NSString *ping = @"ping";
-  NSData *data = [ping dataUsingEncoding:NSUTF8StringEncoding];
-  [socket writeData:data withTimeout:-1 tag:PING];
-  [socket readDataToLength:4 withTimeout:READ_TIMEOUT tag:PANG];
+  [socket writeData:[SharedCode payloadForString:@"ping"] withTimeout:-1 tag:PING];
+  [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:PANG];
 }
 
 - (void) updateJitterDisplay
@@ -223,9 +222,7 @@
   commonFunc.hostname = FORMAT(@"%@:%i", [sock localHost], [sock localPort]);
   
   // Tell the other end that we want to start jitter measurements on the port we are listening to.
-  NSString *connString = FORMAT(@"%i\r\n", [jitterSocket localPort]);
-  NSData *portData = [connString dataUsingEncoding:NSUTF8StringEncoding];
-  [socket writeData:portData withTimeout:-1 tag:CLIENTJITTERPORT];
+  [socket writeData:[SharedCode intToData:[jitterSocket localPort]] withTimeout:-1 tag:CLIENTJITTERPORT];
   NSLog(@"Write clientjitterport in didConnectToHost: %@:%i", host, port);
 }
 
@@ -233,23 +230,27 @@
   switch (tag) {
     case PING:
       [commonFunc startLatencyMeasurement];
+      NSLog(@"Write PING on iPhone");
       break;
       
     case PONG:
       [commonFunc startBandwidthMeasurement];
+      NSLog(@"Write PONG on iPhone");
       break;
       
     case DOWNSTREAM_BW:
       // We sent the downstream bandwidth number to the server
+      NSLog(@"Write DOWNSTREAM_BW on iPhone");
       break;
       
     case DATAFROMCLIENT:
       // We sent the data payload to measure upstream bandwidth
+      NSLog(@"Wrote DATAFROMCLIENT on iPhone");
       break;
       
     case CLIENTJITTERPORT:
       [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:SERVERJITTERPORT];
-      NSLog(@"Registered to read SERVERJITTERPORT after sending clientjitterport");
+      NSLog(@"Registered to read SERVERJITTERPORT after sending CLIENTJITTERPORT");
       // We told the server which port we are listening on.
       break;
       
@@ -258,65 +259,70 @@
   }
 }
 
+
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag {
   switch (tag) {
     case PANG:
     {
+      NSLog(@"Received PANG on iPhone");
       [commonFunc concludeLatencyMeasurement];
-      double latency = [commonFunc latency];
+      clientLatency = [commonFunc latency];
+     
+      NSInteger clientLatencyInMicroseconds = clientLatency * 1000;
+      [socket writeData:[SharedCode intToData:clientLatencyInMicroseconds] withTimeout:-1 tag:PONG];
       
-      NSData *data = [SharedCode payloadForString:@"pong"];
-      [socket writeData:data withTimeout:-1 tag:PONG];
-      [socket readDataToLength:DATASIZE withTimeout:READ_TIMEOUT tag:DATAFROMSERVER];
-      
+      // The server sent us how many bytes to expect.
+      NSInteger numBytesToExpect = [SharedCode dataToInt:data];
+      [commonFunc setNumberOfBytesForDataMeasurements:numBytesToExpect];
+      [socket readDataToLength:numBytesToExpect withTimeout:READ_TIMEOUT tag:DATAFROMSERVER];
+
       NSLog(@"Received pang, sent pong, waiting for datafromserver");
+      NSLog(@"client latency: %f", clientLatency);
       
-      dispatch_async(dispatch_get_main_queue(), ^{
-        @autoreleasepool {NSLog(@"Latency: %fms", latency);}
-      });
       break;
     } 
-      
+
     case DATAFROMSERVER: 
     {
-      NSInteger mbitsPerSecond = [commonFunc getBandwidthInMegabitsPerSecond];
-      NSData *data = [SharedCode intToData:mbitsPerSecond];
+      double mbitsPerSecond = [commonFunc getBandwidthInMegabitsPerSecond];
+      NSInteger downstreamBandwidthInKb = mbitsPerSecond * 1000;
+      NSData *data = [SharedCode intToData:downstreamBandwidthInKb];
       [socket writeData:data withTimeout:-1 tag:DOWNSTREAM_BW];
-      [socket readDataToLength:4 withTimeout:READ_TIMEOUT tag:PENG];
+      [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:PENG];
       
       NSLog(@"Received datafromserver, sent downstream_bw, waiting for peng");
       
-      dispatch_async(dispatch_get_main_queue(), ^{
-        @autoreleasepool {NSLog(@"Downstream bandwidth: %i", mbitsPerSecond);}
-      });
+      NSLog(@"Downstream bandwidth: %f", mbitsPerSecond);
       break;
     }
-      
+
     case PENG:
     {      
       // The server now wants us to send data back.
       [socket writeData:[commonFunc dataPayload] withTimeout:-1 tag:DATAFROMCLIENT];
       [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:UPSTREAM_BW];
+      
+      serverLatency = (double) [SharedCode dataToInt:data] / 1000.0;
+      NSLog(@"Server latency: %f", serverLatency);
       NSLog(@"Received peng, sent datafromclient, waiting for upstrambw");
       break;
     }
-      
+
     case UPSTREAM_BW:
     {
-      NSInteger upstreamBandwith = [SharedCode dataToInt:data];
-      dispatch_async(dispatch_get_main_queue(), ^{
-        @autoreleasepool {NSLog(@"Upstream bandwidth: %i", upstreamBandwith);}
-      });
+      NSInteger upstreamBandwidthInKbit = [SharedCode dataToInt:data];
+      double upstreamBandwidth = (double) upstreamBandwidthInKbit / 1000.0;
+      NSLog(@"Upstream bandwidth: %f", upstreamBandwidth);
       NSLog(@"Received upstream_bw, did nothing in return");
       break;
     }
-      
+    
     case SERVERJITTERPORT:
     {
       serverJitterPort = [SharedCode dataToInt:data];
-      
+
       dispatch_async(dispatch_get_main_queue(), ^{
-        @autoreleasepool {NSLog(@"Server jitter port: %i", serverJitterPort);}
+        NSLog(@"Server jitter port: %i", serverJitterPort);
         
         NSString *host = [sock connectedHost];
         NSLog(@"Sending jitter to port %@:%i", host, serverJitterPort);
@@ -327,16 +333,15 @@
         [commonFunc performSelectorInBackground:@selector(performJitterMeasurements:) withObject:infoDict];
       });
       
-      NSLog(@"Reveived serverjitterport, did nothing in return. (%iu)", serverJitterPort);
+      NSLog(@"Reveived serverjitterport, did nothing in return. (%u)", serverJitterPort);
       // Initiate the server jitter sending on a separate thread, but from the main thread.
       break;
     }
-      
+
     default:
       break;
   }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - GCDAsyncUDPSocket delegate methods

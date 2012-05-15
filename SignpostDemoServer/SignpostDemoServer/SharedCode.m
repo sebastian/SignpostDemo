@@ -42,7 +42,6 @@
 
 - (void)setNumberOfBytesForDataMeasurements:(NSInteger)numBytes
 {
-  NSLog(@"Setting num of bytes to use to be: %ld", numBytes);
   if (numBytesForData != numBytes)
   {
     NSLog(@"This required a byte adjustment. The data cache is removed");

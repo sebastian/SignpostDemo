@@ -367,8 +367,13 @@ withFilterContext:(id)filterContext
   double timeDiff = [SharedCode msFromTimestampData:data];
   NSString *host = [SharedCode hostFromData:data];
   [commFunc addJitterMeasurement:timeDiff forHost:host];
-  double jitter = [[commFunc currentJitterForHost:host] doubleValue];
-  [self.jitterLabel setStringValue:[NSString stringWithFormat:@"%f ms", jitter]];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    @autoreleasepool {
+      double jitter = [[commFunc currentJitterForHost:host] doubleValue];
+      [self.jitterLabel setStringValue:[NSString stringWithFormat:@"%f ms", jitter]];
+    }
+  });	
+
 }
 
 @end

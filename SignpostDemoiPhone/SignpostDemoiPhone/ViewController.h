@@ -37,6 +37,9 @@
   NSString *jitterHost;
   
   Meter *meter;
+  
+  double clientLatency;
+  double serverLatency;
 }
 
 @property (assign) IBOutlet UIButton *connectButton;
