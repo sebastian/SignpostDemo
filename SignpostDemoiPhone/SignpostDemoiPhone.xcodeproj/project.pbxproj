@@ -22,6 +22,11 @@
 		0C465318155AB9FA004A8398 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C465317155AB9FA004A8398 /* CFNetwork.framework */; };
 		0CB0858F155D6AC700986CF7 /* Meter.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CB0858E155D6AC700986CF7 /* Meter.m */; };
 		0CB977221562962300512752 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CB977211562962300512752 /* QuartzCore.framework */; };
+		0CBC9B5D1563D74F00F5AA0E /* SignpostDemoiPhone.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CBC9B5C1563D74F00F5AA0E /* SignpostDemoiPhone.png */; };
+		0CBC9B601563DC1300F5AA0E /* needle.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CBC9B5F1563DC1300F5AA0E /* needle.png */; };
+		0CBC9B621563FA6E00F5AA0E /* ConnectDialog.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CBC9B611563FA6E00F5AA0E /* ConnectDialog.png */; };
+		0CBC9B65156402A200F5AA0E /* LatencyGoodputView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CBC9B64156402A200F5AA0E /* LatencyGoodputView.m */; };
+		0CBC9B691564031D00F5AA0E /* CircleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CBC9B681564031D00F5AA0E /* CircleView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +54,13 @@
 		0CB0858D155D6AC700986CF7 /* Meter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Meter.h; sourceTree = "<group>"; };
 		0CB0858E155D6AC700986CF7 /* Meter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Meter.m; sourceTree = "<group>"; };
 		0CB977211562962300512752 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		0CBC9B5C1563D74F00F5AA0E /* SignpostDemoiPhone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SignpostDemoiPhone.png; sourceTree = "<group>"; };
+		0CBC9B5F1563DC1300F5AA0E /* needle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = needle.png; sourceTree = "<group>"; };
+		0CBC9B611563FA6E00F5AA0E /* ConnectDialog.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ConnectDialog.png; sourceTree = "<group>"; };
+		0CBC9B63156402A200F5AA0E /* LatencyGoodputView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LatencyGoodputView.h; sourceTree = "<group>"; };
+		0CBC9B64156402A200F5AA0E /* LatencyGoodputView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LatencyGoodputView.m; sourceTree = "<group>"; };
+		0CBC9B671564031D00F5AA0E /* CircleView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CircleView.h; sourceTree = "<group>"; };
+		0CBC9B681564031D00F5AA0E /* CircleView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CircleView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +113,7 @@
 		0C4652DE155AB32B004A8398 /* SignpostDemoiPhone */ = {
 			isa = PBXGroup;
 			children = (
+				0CBC9B66156402A800F5AA0E /* LatencyGoodput */,
 				0CB0858B155D6AAC00986CF7 /* Meter */,
 				0C465300155AB64B004A8398 /* SharedCode.h */,
 				0C465301155AB64B004A8398 /* SharedCode.m */,
@@ -118,6 +131,9 @@
 		0C4652DF155AB32B004A8398 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				0CBC9B611563FA6E00F5AA0E /* ConnectDialog.png */,
+				0CBC9B5F1563DC1300F5AA0E /* needle.png */,
+				0CBC9B5C1563D74F00F5AA0E /* SignpostDemoiPhone.png */,
 				0C4652E0155AB32B004A8398 /* SignpostDemoiPhone-Info.plist */,
 				0C4652E1155AB32B004A8398 /* InfoPlist.strings */,
 				0C4652E4155AB32B004A8398 /* main.m */,
@@ -144,6 +160,17 @@
 				0CB0858E155D6AC700986CF7 /* Meter.m */,
 			);
 			name = Meter;
+			sourceTree = "<group>";
+		};
+		0CBC9B66156402A800F5AA0E /* LatencyGoodput */ = {
+			isa = PBXGroup;
+			children = (
+				0CBC9B63156402A200F5AA0E /* LatencyGoodputView.h */,
+				0CBC9B64156402A200F5AA0E /* LatencyGoodputView.m */,
+				0CBC9B671564031D00F5AA0E /* CircleView.h */,
+				0CBC9B681564031D00F5AA0E /* CircleView.m */,
+			);
+			name = LatencyGoodput;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -199,6 +226,9 @@
 			files = (
 				0C4652E3155AB32B004A8398 /* InfoPlist.strings in Resources */,
 				0C4652EF155AB32B004A8398 /* ViewController.xib in Resources */,
+				0CBC9B5D1563D74F00F5AA0E /* SignpostDemoiPhone.png in Resources */,
+				0CBC9B601563DC1300F5AA0E /* needle.png in Resources */,
+				0CBC9B621563FA6E00F5AA0E /* ConnectDialog.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +246,8 @@
 				0C4652FA155AB374004A8398 /* GCDAsyncUdpSocket.m in Sources */,
 				0C465302155AB64B004A8398 /* SharedCode.m in Sources */,
 				0CB0858F155D6AC700986CF7 /* Meter.m in Sources */,
+				0CBC9B65156402A200F5AA0E /* LatencyGoodputView.m in Sources */,
+				0CBC9B691564031D00F5AA0E /* CircleView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

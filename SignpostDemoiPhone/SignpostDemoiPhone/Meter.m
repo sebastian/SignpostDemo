@@ -10,9 +10,9 @@
 
 #define DT 0.01
 #define DERIVATIVE_GAIN 4.0
-#define ACCELERATION_THRESHOLD 100
-#define NORMALIZING_FACTOR 300
-#define NORMALIZING_FACTOR_Y 160
+#define ACCELERATION_THRESHOLD 500
+#define NORMALIZING_FACTOR 700
+#define NORMALIZING_FACTOR_Y 350
 #define ACCELERATION_HISTORY_SIZE 3
 
 
@@ -25,7 +25,7 @@
 #pragma mark - Setup
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (id) init
+- (id) initWithNeedleImage:(UIImage *)needle
 {
   self = [super init];
   if (self)
@@ -33,38 +33,39 @@
     maxValue = 100.0;
     previousMeasurements = [[NSMutableArray alloc] initWithCapacity:ACCELERATION_HISTORY_SIZE];
     currentlyAnimatingAcceleration = NO;
+    needleImage = needle;
   }
   return self;
 }
 
 - (void) viewDidLoad
 {
-  NSLog(@"Adding view");
-  
   self.accelerometer = [UIAccelerometer sharedAccelerometer];
   self.accelerometer.updateInterval = DT;
   self.accelerometer.delegate = self;
-      
+        
   // The view that is from the acceleration
-  accelerationResultView = [[UIView alloc] initWithFrame:CGRectMake(100, 100, 100, 100)];
-  accelerationResultView.backgroundColor = [UIColor greenColor];
-  accelerationResultView.layer.anchorPoint = CGPointMake(0.5, 1.0);
+  accelerationResultView = [[UIView alloc] initWithFrame:CGRectMake(10, 10, needleImage.size.width / 2, needleImage.size.height / 2)];
+  accelerationResultView.backgroundColor = [UIColor clearColor];
+  accelerationResultView.layer.anchorPoint = CGPointMake(0.5, 0.0);
 
   [self.view addSubview:accelerationResultView];
   
   CGRect frame = accelerationResultView.frame;
-  CGFloat needleWidth = 10;
+  CGFloat needleWidth = needleImage.size.width / 2;
+  CGFloat needleHeight = needleImage.size.height / 2;
   CGFloat needleX = (frame.size.width / 2) - (needleWidth / 2);
-  CGFloat needleHeight = frame.size.height;
-  CGFloat needleY = frame.origin.y;
+  CGFloat needleY = frame.origin.y - needleHeight - 2;
 
   // The needle itself
+//  CGRect needleFrame = CGRectMake(needleX, needleY, needleWidth, needleHeight);
   CGRect needleFrame = CGRectMake(needleX, needleY, needleWidth, needleHeight);
-  needleView = [[UIView alloc] initWithFrame:needleFrame];
-  needleView.backgroundColor = [UIColor blackColor];
-  needleView.layer.anchorPoint = CGPointMake(0.5, 1.0);
+  needleView = [[UIImageView alloc] initWithFrame:needleFrame];
+  needleView.layer.anchorPoint = CGPointMake(0.5, 0.05);
+  needleView.backgroundColor = [UIColor clearColor];
+  needleView.image = [UIImage imageNamed:@"needle.png"];
 
-  
+
   [accelerationResultView addSubview:needleView];
 
   [self setCurrentValue:50 withCallback:^{}];
@@ -96,18 +97,16 @@
   if (fractionOfMax < 0.0)
     fractionOfMax = 0.0;
   
-  CGFloat normalizedDegrees = (180.0 * fractionOfMax) - 90.0;
+  CGFloat normalizedDegrees = 180 - (180.0 * fractionOfMax) - 90.0;
   CGFloat normalizedRadians = normalizedDegrees * M_PI / 180.0;
   
   [UIView animateWithDuration:0.3 animations: ^{
     needleView.transform = CGAffineTransformMakeRotation(normalizedRadians);
   } completion:^(BOOL completed) {
-    NSLog(@"Animation completed: %i", completed);
     callback();
   }];
   
   currentEndDegreeValueOfNeedle = normalizedDegrees;
-  NSLog(@"currentEndDegreeValueOfNeedle: %f", currentEndDegreeValueOfNeedle);
 }
 
 - (void)setAcceleration:(CGFloat)acceleration
@@ -142,14 +141,13 @@
   {
     normalizedDegrees = 90 + currentEndDegreeValueOfNeedle;
   }
-  NSLog(@"Normalized degrees: %f", normalizedDegrees);
   
   CGFloat normalizedRadians = normalizedDegrees * M_PI / 180.0;
   
   [UIView animateWithDuration:0.1 animations: ^{
     accelerationResultView.transform = CGAffineTransformMakeRotation(normalizedRadians);
   } completion:^(BOOL completed) {
-    [UIView animateWithDuration:0.5 animations: ^{
+    [UIView animateWithDuration:0.3 animations: ^{
       accelerationResultView.transform = CGAffineTransformMakeRotation(0);
     } completion:^(BOOL completed) {
       currentlyAnimatingAcceleration = NO;
@@ -165,8 +163,10 @@
 - (void)accelerometer:(UIAccelerometer *)accelerometer didAccelerate:(UIAcceleration *)acceleration {
   double change = 0.0;
 
-  double lastValueX = [self latestForCallback:^(UIAcceleration *acc) { return acc.x; }];
-  double lastValueY = [self latestForCallback:^(UIAcceleration *acc) { return acc.y; }];
+  [self addMeasurement:acceleration];
+  
+  double lastValueX = [self diffsFor:^(UIAcceleration *acc) { return acc.x; }];
+  double lastValueY = [self diffsFor:^(UIAcceleration *acc) { return acc.y; }];
 
   UIAccelerationValue currentValueX = acceleration.x;
   UIAccelerationValue currentValueY = acceleration.y;
@@ -193,20 +193,27 @@
   
   if ((change > ACCELERATION_THRESHOLD) || (change < ((-1)*ACCELERATION_THRESHOLD)))
   {
-    NSLog(@"Change: %f", change);
-    [self setAcceleration:change];
+    [self setAcceleration:(-1.0)*change];
   }
-    
-  [self addMeasurement:acceleration];
 }
 
-- (double)latestForCallback:(double (^)(UIAcceleration *))selector
+- (double)diffsFor:(double (^)(UIAcceleration *))selector
 {
   double acc = 0.0;
-  NSInteger numElements = [previousMeasurements count];
+  UIAcceleration *previous = nil;
   for (UIAcceleration *acceleration in previousMeasurements)
   {
-    acc += selector(acceleration) / (double) numElements;
+    if (previous == nil)
+    {
+      previous = acceleration;
+    }
+    else 
+    {
+      double prev = selector(previous);
+      double current = selector(acceleration);
+      acc += prev - current;
+    }
+//    acc += selector(acceleration) / (double) numElements;
   }
   return acc;
 }

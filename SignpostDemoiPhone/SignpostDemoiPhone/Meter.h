@@ -14,7 +14,7 @@
 
 @interface Meter : UIViewController <UIAccelerometerDelegate>
 {
-  UIView *needleView;
+  UIImageView *needleView;
   UIView *accelerationResultView;
   CGFloat maxValue;
   
@@ -22,10 +22,14 @@
   
   CGFloat currentEndDegreeValueOfNeedle;
   BOOL currentlyAnimatingAcceleration;
+  
+  UIImage *needleImage;
 }
 
 @property (nonatomic, assign) id<MeterDelegate> delegate;
 @property (nonatomic, retain) UIAccelerometer *accelerometer;
+
+- (id) initWithNeedleImage:(UIImage *)needle;
 
 - (void)setMaxValue:(CGFloat)maxValue;
 - (void)setCurrentValue:(CGFloat)currentValue;

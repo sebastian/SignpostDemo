@@ -12,6 +12,7 @@
 @class GCDAsyncUdpSocket;
 @class SharedCode;
 @class Meter;
+@class LatencyGoodputView;
 
 @interface ViewController : UIViewController <UITextFieldDelegate>
 {
@@ -41,14 +42,18 @@
   
   double clientLatency;
   double serverLatency;
+  
+  double downstreamBandwidth;
+  double upstreamBandwidth;
 }
 
 @property (assign) IBOutlet UIButton *connectButton;
 @property (assign) IBOutlet UITextField *hostField;
 @property (assign) IBOutlet UITextField *portField;
-@property (assign) IBOutlet UILabel *jitterLabel;
+@property (assign) IBOutlet UIView *connectView;
+@property (assign) IBOutlet UIView *connectViewControls;
+@property (assign) IBOutlet UIView *connectViewFadeout;
+@property (assign) IBOutlet LatencyGoodputView *latencyGoodputView;
 
 - (IBAction)connectToHostButtonClicked:(id)sender;
-- (IBAction)runPingPangPongData:(id)sender;
-- (IBAction)rotateNeedle:(id)sender;
 @end

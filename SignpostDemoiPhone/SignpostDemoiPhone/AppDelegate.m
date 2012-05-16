@@ -20,6 +20,7 @@
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
   self.window.rootViewController = self.viewController;
+  [application setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
   [self.window makeKeyAndVisible];
   return YES;
 }

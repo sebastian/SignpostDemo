@@ -11,6 +11,7 @@
 #import "GCDAsyncSocket.h"
 #import "GCDAsyncUdpSocket.h"
 #import "SharedCode.h"
+#import "LatencyGoodputView.h"
 
 #import "Meter.h"
 
@@ -23,7 +24,10 @@
 @synthesize connectButton = _connectButton;
 @synthesize hostField = _hostField;
 @synthesize portField = _portField;
-@synthesize jitterLabel = _jitterLabel;
+@synthesize connectView = _connectView;
+@synthesize connectViewControls = _connectViewControls;
+@synthesize connectViewFadeout = _connectViewFadeout;
+@synthesize latencyGoodputView = _latencyGoodputView;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,12 +58,7 @@
 - (void)viewDidLoad
 {
   [super viewDidLoad];
-  
-  meter = [[Meter alloc] init];
-  CGRect meterFrame = CGRectMake(0, 200, 200, 200);
-  meter.view.frame = meterFrame;
-  [self.view addSubview:meter.view];
-  [meter setMaxValue:300.0];
+  [self addMeterAndConnectionView];
 }
 
 - (void)viewDidUnload
@@ -77,21 +76,6 @@
 #pragma mark - IBActions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (IBAction)rotateNeedle:(id)sender
-{
-  __unsafe_unretained Meter *m = meter;
-  [meter setCurrentValue:40 withCallback:^{
-    __unsafe_unretained Meter *m2 = m;
-    [m setCurrentValue:0 withCallback:^{
-      __unsafe_unretained Meter *m3 = m2;      
-      [m2 setCurrentValue:100 withCallback:^{
-        [m3 setCurrentValue:50 withCallback:^{
-          NSLog(@"Round complete");
-        }];
-      }];
-    }];
-  }];
-}
 
 - (IBAction)connectToHostButtonClicked:(id)sender 
 {
@@ -160,6 +144,55 @@
 #pragma mark - Misc for logging and displaying info
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+- (void)addMeterAndConnectionView
+{
+  UIImage *needle = [UIImage imageNamed:@"needle.png"];
+  meter = [[Meter alloc] initWithNeedleImage:needle];
+  
+  CGRect screenFrame = [UIScreen mainScreen].bounds;
+  CGFloat screenHeight = screenFrame.size.height;
+  
+  
+  CGFloat needleWidth = needle.size.width / 2.0;
+  CGFloat needleHeight = needle.size.height / 2.0;
+  
+  
+  CGFloat meterX = (screenFrame.size.width / 2.0) -  needleWidth - 1;
+  CGFloat meterY = screenHeight - needleHeight - 125;
+  
+  CGRect meterFrame = CGRectMake(meterX, meterY, needleWidth, needleHeight);
+  meter.view.frame = meterFrame;
+  [self.view addSubview:meter.view];
+  [meter setMaxValue:300.0];
+  
+  [self.view addSubview:self.connectView];
+  [self showConnectView];
+}
+
+- (void)showConnectView
+{
+  NSLog(@"Showing connection view");
+  [UIView animateWithDuration:1 animations:^{
+    CGRect newFrame = self.connectViewControls.frame;
+    newFrame.origin.y = 0;
+    self.connectViewControls.frame = newFrame;    
+    
+    self.connectViewFadeout.alpha = 0.5;
+  }];  
+}
+
+- (void)hideConnectView
+{
+  NSLog(@"Hiding connection view");
+  [UIView animateWithDuration:1 animations:^{
+    CGRect newFrame = self.connectViewControls.frame;
+    newFrame.origin.y = -300;
+    self.connectViewControls.frame = newFrame;    
+    
+    self.connectViewFadeout.alpha = 0.0;  
+  }];
+}
+
 - (void) setIsConnectedAndDisableControls 
 {
   isConnected = YES;
@@ -195,14 +228,11 @@
     while ([socket isConnected])
     {
       nanosleep(&a, NULL);
-      double localJitter = [[commonFunc currentJitterForHost:jitterHost] doubleValue];
       dispatch_async(dispatch_get_main_queue(), ^{
         @autoreleasepool {
-          self.jitterLabel.text = [NSString stringWithFormat:@"seen locally: %fms, seen on server: %fms", localJitter, serverJitter];
           [meter setCurrentValue:averageJitter withCallback:^{}];
         }
       });
-      [self.jitterLabel setNeedsLayout];
     }
   }
 }
@@ -229,13 +259,20 @@
 {
   NSLog(@"Socket was closed.");
   [self setIsDisconnectedAndEnableControls];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    @autoreleasepool {[self showConnectView];}
+  });
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port {
   NSLog(@"Connected to %@:%i", host, port);
   
   [self performSelectorInBackground:@selector(updateJitterDisplay) withObject:nil];
-  
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    @autoreleasepool {[self hideConnectView];}
+  });
+
   commonFunc.hostname = FORMAT(@"%@:%i", [sock localHost], [sock localPort]);
   
   // Tell the other end that we want to start jitter measurements on the port we are listening to.
@@ -310,6 +347,12 @@
       NSLog(@"Received datafromserver, sent downstream_bw, waiting for peng");
       
       NSLog(@"Downstream bandwidth: %f", mbitsPerSecond);
+      
+      downstreamBandwidth = mbitsPerSecond;
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"Showing latency view");
+        [self.latencyGoodputView showMeasuredGoodPut:downstreamBandwidth latency:clientLatency];
+      });
       break;
     }
 
@@ -328,9 +371,13 @@
     case UPSTREAM_BW:
     {
       NSInteger upstreamBandwidthInKbit = [SharedCode dataToInt:data];
-      double upstreamBandwidth = (double) upstreamBandwidthInKbit / 1000.0;
+      upstreamBandwidth = (double) upstreamBandwidthInKbit / 1000.0;
       NSLog(@"Upstream bandwidth: %f", upstreamBandwidth);
       NSLog(@"Received upstream_bw, did nothing in return");
+
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [self startPingPangPongData];
+      });
       break;
     }
     
@@ -352,6 +399,12 @@
       
       NSLog(@"Reveived serverjitterport, did nothing in return. (%u)", serverJitterPort);
       // Initiate the server jitter sending on a separate thread, but from the main thread.
+
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"#### Starting ping pang pong");
+        [self startPingPangPongData];
+      });
+
       break;
     }
 
