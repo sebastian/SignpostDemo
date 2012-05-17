@@ -45,6 +45,7 @@
   
   double downstreamBandwidth;
   double upstreamBandwidth;
+  NSDate *startTimeLatency, *startTimeBandwidth;
 }
 
 @property (assign) IBOutlet UIButton *connectButton;

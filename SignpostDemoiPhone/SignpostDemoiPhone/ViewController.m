@@ -273,9 +273,11 @@
     @autoreleasepool {[self hideConnectView];}
   });
 
-  commonFunc.hostname = FORMAT(@"%@:%i", [sock localHost], [sock localPort]);
+  NSString *hostname = FORMAT(@"%@:%i", [sock localHost], [sock localPort]);
+  commonFunc.hostname = hostname;
   
   // Tell the other end that we want to start jitter measurements on the port we are listening to.
+  [socket writeData:[SharedCode payloadForString:hostname] withTimeout:-1 tag:CLIENTID];
   [socket writeData:[SharedCode intToData:[jitterSocket localPort]] withTimeout:-1 tag:CLIENTJITTERPORT];
   NSLog(@"Write clientjitterport in didConnectToHost: %@:%i", host, port);
 }
@@ -283,12 +285,12 @@
 - (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag {
   switch (tag) {
     case PING:
-      [commonFunc startLatencyMeasurement];
+      startTimeLatency = [commonFunc startLatencyMeasurement];
       NSLog(@"Write PING on iPhone");
       break;
       
     case PONG:
-      [commonFunc startBandwidthMeasurement];
+      startTimeBandwidth = [commonFunc startBandwidthMeasurement];
       NSLog(@"Write PONG on iPhone");
       break;
       
@@ -300,6 +302,10 @@
     case DATAFROMCLIENT:
       // We sent the data payload to measure upstream bandwidth
       NSLog(@"Wrote DATAFROMCLIENT on iPhone");
+      break;
+      
+    case CLIENTID:
+      NSLog(@"Sent Client id");
       break;
       
     case CLIENTJITTERPORT:
@@ -319,8 +325,7 @@
     case PANG:
     {
       NSLog(@"Received PANG on iPhone");
-      [commonFunc concludeLatencyMeasurement];
-      clientLatency = [commonFunc latency];
+      clientLatency = [commonFunc concludeLatencyMeasurementForDate:startTimeLatency];
      
       NSInteger clientLatencyInMicroseconds = clientLatency * 1000;
       [socket writeData:[SharedCode intToData:clientLatencyInMicroseconds] withTimeout:-1 tag:PONG];
@@ -338,7 +343,7 @@
 
     case DATAFROMSERVER: 
     {
-      double mbitsPerSecond = [commonFunc getBandwidthInMegabitsPerSecond];
+      double mbitsPerSecond = [commonFunc getBandwidthInMegabitsPerSecondForStartTime:startTimeBandwidth];
       NSInteger downstreamBandwidthInKb = mbitsPerSecond * 1000;
       NSData *data = [SharedCode intToData:downstreamBandwidthInKb];
       [socket writeData:data withTimeout:-1 tag:DOWNSTREAM_BW];
@@ -391,8 +396,8 @@
         NSString *host = [sock connectedHost];
         NSLog(@"Sending jitter to port %@:%i", host, serverJitterPort);
         
-        NSArray *objects = [NSArray arrayWithObjects:host, [NSNumber numberWithInt:serverJitterPort], jitterSocket, sock, nil];
-        NSArray *keys = [NSArray arrayWithObjects:@"host", @"port", @"sendSocket", @"receiveSocket", nil];
+        NSArray *objects = [NSArray arrayWithObjects:host, [NSNumber numberWithInt:serverJitterPort], @"server", jitterSocket, sock, nil];
+        NSArray *keys = [NSArray arrayWithObjects:@"host", @"port", @"hostname", @"sendSocket", @"receiveSocket", nil];
         NSDictionary *infoDict = [NSDictionary dictionaryWithObjects:objects forKeys:keys];
         [commonFunc performSelectorInBackground:@selector(performJitterMeasurements:) withObject:infoDict];
       });
@@ -422,7 +427,8 @@
 withFilterContext:(id)filterContext 
 {
   double timeDiff = [SharedCode msFromTimestampData:data];
-  jitterHost = [SharedCode hostFromData:data];
+//  jitterHost = [SharedCode hostFromData:data];
+  jitterHost = @"server"; // we are only receiving jitter from server
   [commonFunc addJitterMeasurement:timeDiff forHost:jitterHost];
   serverJitter = [[SharedCode hostJitterFromData:data] doubleValue];
   double clientJitter = [[commonFunc currentJitterForHost:jitterHost] doubleValue];

@@ -24,8 +24,6 @@
   if (self)
   {
     dataPayload = nil;
-    startTimeBandwidth = nil;
-    startTimeLatency = nil;
     latency = 0.0;
     jitterMeasurements = [[NSMutableDictionary alloc] init];
     jitterCache = [[NSMutableDictionary alloc] init];
@@ -62,17 +60,12 @@
 #pragma mark - Latency related functionality
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)startLatencyMeasurement {
-  startTimeLatency = [NSDate date];
+- (NSDate *)startLatencyMeasurement {
+  return [NSDate date];
 }
 
-- (void)concludeLatencyMeasurement {
-  latency = ([startTimeLatency timeIntervalSinceNow] * -1000.0)/2.0; // We divide by two to get latency, rather than RTT.
-}
-
-- (double)latency 
-{
-  return latency;
+- (double)concludeLatencyMeasurementForDate:(NSDate *)startTimeLatency {
+  return ([startTimeLatency timeIntervalSinceNow] * -1000.0)/2.0; // We divide by two to get latency, rather than RTT.
 }
 
 
@@ -80,12 +73,12 @@
 #pragma mark - Bandwidth related functionality
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)startBandwidthMeasurement
+- (NSDate *)startBandwidthMeasurement
 {
-  startTimeBandwidth = [NSDate date];
+  return [NSDate date];
 }
 
-- (double) getBandwidthInMegabitsPerSecond
+- (double) getBandwidthInMegabitsPerSecondForStartTime:(NSDate *)startTimeBandwidth
 {
   double transmissionTime = [startTimeBandwidth timeIntervalSinceNow] * (-1000.0) - (2 * latency); // in ms
   double numPerSecond = (1 / transmissionTime) * 1000;
@@ -130,6 +123,12 @@
 + (NSData *) payloadForString:(NSString *)stringVal
 {
   return [[stringVal stringByAppendingFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding];  
+}
+
++ (NSString *) stringFromData:(NSData *)data
+{
+  NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+  return [string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
 // This method takes a host and a port. The host and port serve to provide 
@@ -219,7 +218,9 @@
 
 - (NSNumber *)currentJitterForHost:(NSString *)host
 {
-  return (NSNumber *) [jitterCache valueForKey:host];
+  @synchronized(jitterMeasurements) {
+    return (NSNumber *) [jitterCache valueForKey:host];
+  }
 }
 
 - (void)performJitterMeasurements:(NSDictionary*)infoDict {
@@ -227,6 +228,7 @@
   {
     NSString *host = (NSString *) [infoDict valueForKey:@"host"];
     NSInteger port = [(NSNumber *) [infoDict valueForKey:@"port"] integerValue];
+    NSString *hostname = [infoDict valueForKey:@"hostname"];
     GCDAsyncSocket *socket = (GCDAsyncSocket *) [infoDict valueForKey:@"receiveSocket"];
     GCDAsyncUdpSocket *jitterSocket = (GCDAsyncUdpSocket *) [infoDict valueForKey:@"sendSocket"];
     
@@ -236,11 +238,10 @@
     
     NSNumber *currentJitter;
     NSData *payload;
-    NSString * jitterHostName = [NSString stringWithFormat:@"%@:%i", host, [socket connectedPort]];
     
     while ([socket isConnected])
     {
-      currentJitter = [self currentJitterForHost:jitterHostName];
+      currentJitter = [self currentJitterForHost:hostname];
       if (currentJitter == nil)
         currentJitter = [NSNumber numberWithInt:0];
       payload = [self jitterPayloadContainingJitter:currentJitter];

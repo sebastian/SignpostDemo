@@ -11,6 +11,7 @@
 @class GCDAsyncSocket;
 @class GCDAsyncUdpSocket;
 @class SharedCode;
+@class HTTPServer;
 
 @interface SignpostDemoServerAppDelegate : NSObject <NSApplicationDelegate> {
   // TCP measurement server socket
@@ -27,8 +28,10 @@
   // Code for common functionality... nasty design.
   SharedCode *commFunc;
   
-  double serverLatency;
-  double clientLatency;
+  NSMutableDictionary *userData;
+  dispatch_queue_t latencyAccessQueue;
+  
+	HTTPServer *httpServer;
 }
 
 @property (assign) IBOutlet NSWindow *window;
@@ -40,4 +43,6 @@
 
 - (IBAction) pushedStartStopButton:(id)sender;
 
+- (NSData *)dataResponseForHTTPServer:(id)sender;
++ (id) getMe;
 @end

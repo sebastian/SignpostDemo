@@ -59,6 +59,10 @@ typedef enum {
    */
   CLIENTJITTERPORT,
   
+  /* The id of the client, as selfreported by the client.
+   */
+  CLIENTID,
+  
   /* Sent by the server in response to a CLIENTJITTERPORT message. The message contains
    * the UDP port number the server will be listening to for jitter messages from the client.
    */  
@@ -84,8 +88,6 @@ typedef enum {
 @interface SharedCode : NSObject 
 {
   NSData *dataPayload;
-  NSDate *startTimeBandwidth;
-  NSDate *startTimeLatency;
   
   NSMutableDictionary *jitterMeasurements;
   NSMutableDictionary *jitterCache;
@@ -107,14 +109,14 @@ typedef enum {
 
 
 // Latency related functionality
-- (void)startLatencyMeasurement;
-- (void)concludeLatencyMeasurement;
-- (double)latency;
+- (NSDate *)startLatencyMeasurement;
+- (double)concludeLatencyMeasurementForDate:(NSDate *)startTimeLatency;
 
 
 // Bandwidth related functionality
-- (void)startBandwidthMeasurement;
-- (double) getBandwidthInMegabitsPerSecond;
+- (NSDate *)startBandwidthMeasurement;
+- (double) getBandwidthInMegabitsPerSecondForStartTime:(NSDate *)startTimeBandwidth;
+
 
 
 // Data handling and conversion related functionality
@@ -122,6 +124,7 @@ typedef enum {
 + (NSData *) intToData:(NSInteger)integerValue;
 + (NSInteger) dataToInt:(NSData *)data;
 + (NSData *) payloadForString:(NSString *)stringVal;
++ (NSString *) stringFromData:(NSData *)data;
 
 
 // Jitter related functionality

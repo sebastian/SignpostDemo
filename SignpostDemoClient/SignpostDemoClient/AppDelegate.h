@@ -37,6 +37,7 @@
   
   double clientLatency;
   double serverLatency;
+  NSDate *startTimerLatency, *startTimerBandwidth;
 }
 
 @property (assign) IBOutlet NSWindow *window;
