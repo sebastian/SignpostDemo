@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="118dp"
+        android:layout_height="wrap_content"
+        android:text="Latency"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <EditText
+        android:id="@+id/latencyTextboxDownstream"
+        android:layout_width="match_parent"
+        android:layout_height="31dp"
+        android:ems="10" />
+
+    <EditText
+        android:id="@+id/latencyTextboxUpstream"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:ems="10" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Goodput"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <EditText
+        android:id="@+id/goodputTextboxDownstream"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:ems="10" />
+
+    <EditText
+        android:id="@+id/goodputTextboxUpstream"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:ems="10" />
+
+    <Button
+        android:id="@+id/startTest"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="Start Test" />
+
+    <Button
+        android:id="@+id/stopTest"
+        android:layout_width="79dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="Stop Test" />
+  
+</LinearLayout>
