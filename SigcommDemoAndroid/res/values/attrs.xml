@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<declare-styleable name="GraphView">
+		<attr name="graph_top_padding" format="float" />
+		<attr name="graph_bottom_padding" format="float" />
+		<attr name="graph_left_padding" format="float" />
+		<attr name="graph_right_padding" format="float" />
+		<attr name="graph_gridline_label_hori_spacing" format="float" />
+		<attr name="graph_gridline_label_vert_spacing" format="float" />
+
+		<attr name="graph_draw_overlay1" format="boolean" />
+		<attr name="graph_overlay1_colour" format="color" />
+		<attr name="graph_overlay1_text" format="string" />
+		<attr name="graph_overlay1_text_size" format="float" />
+		<attr name="graph_overlay1_text_anti_alias" format="boolean" />
+		<attr name="graph_overlay1_x_pos" format="float" />
+		<attr name="graph_overlay1_y_pos" format="float" />
+
+		<attr name="graph_draw_overlay2" format="boolean" />
+		<attr name="graph_overlay2_colour" format="color" />
+		<attr name="graph_overlay2_text" format="string" />
+		<attr name="graph_overlay2_text_size" format="float" />
+		<attr name="graph_overlay2_text_anti_alias" format="boolean" />
+		<attr name="graph_overlay2_x_pos" format="float" />
+		<attr name="graph_overlay2_y_pos" format="float" />
+
+		<attr name="graph_axis_label_colour" format="color" />
+		<attr name="graph_x_axis_label_offset" format="float" />
+		<attr name="graph_y_axis_label_offset" format="float" />
+		<attr name="graph_axis_label_text_size" format="float" />
+		<attr name="graph_axis_label_anti_alias" format="boolean" />
+
+		<attr name="graph_y_axis_labels" format="string" />
+		<attr name="graph_y_axis_label_positions" format="string" />
+		<attr name="graph_y_tick_positions" format="string" />
+		<attr name="graph_x_axis_labels" format="string" />
+		<attr name="graph_x_axis_label_positions" format="string" />
+		<attr name="graph_x_tick_positions" format="string" />
+
+		<attr name="graph_axes_colour" format="color" />
+		<attr name="graph_axes_text_size" format="float" />
+		<attr name="graph_axes_anti_alias" format="boolean" />
+		<attr name="graph_axes_stroke_width" format="float" />
+
+		<attr name="graph_gridlines_colour" format="color" />
+		<attr name="graph_gridlines_anti_alias" format="boolean" />
+		<attr name="graph_gridlines_stroke_width" format="float" />
+
+		<attr name="graph_ascending_colour" format="color" />
+		<attr name="graph_ascending_anti_alias" format="boolean" />
+		<attr name="graph_ascending_stroke_width" format="float" />
+
+		<attr name="graph_descending_colour" format="color" />
+		<attr name="graph_descending_anti_alias" format="boolean" />
+		<attr name="graph_descending_stroke_width" format="float" />
+
+		<attr name="graph_line_width" format="float" />
+		<attr name="graph_line_colour" format="color" />
+		<attr name="graph_line_anti_alias" format="boolean" />
+
+		<attr name="graph_bar_border" format="float" />
+		<attr name="graph_bar_number_spacing" format="float" />
+		<attr name="graph_draw_bar_numbers" format="boolean" />
+	</declare-styleable>
+
+	<declare-styleable name="HeatMapView">
+		<attr name="heat_map_top_padding" format="float" />
+		<attr name="heat_map_bottom_padding" format="float" />
+		<attr name="heat_map_left_padding" format="float" />
+		<attr name="heat_map_right_padding" format="float" />
+
+		<attr name="heat_map_tick_length" format="float" />
+		<attr name="heat_map_x_label_spacing" format="float" />
+		<attr name="heat_map_y_label_spacing" format="float" />
+
+		<attr name="heat_map_y_axis_labels" format="string" />
+		<attr name="heat_map_y_axis_label_positions" format="string" />
+		<attr name="heat_map_x_axis_labels" format="string" />
+		<attr name="heat_map_x_axis_label_positions" format="string" />
+
+		<attr name="heat_map_colours" format="string" />
+		<attr name="heat_map_no_data_colour" format="integer" />
+		<attr name="heat_map_colour_upper_bounds" format="string" />
+	</declare-styleable>
+
+	<declare-styleable name="HeatMapLegendView">
+		<attr name="heat_map_legend_text_colour" format="color" />
+		<attr name="heat_map_legend_box_border_colour" format="color" />
+		<attr name="heat_map_legend_min_colour" format="color" />
+		<attr name="heat_map_legend_max_colour" format="color" />
+		<attr name="heat_map_legend_no_data_colour" format="color" />
+		<attr name="heat_map_legend_text_size" format="float" />
+		<attr name="heat_map_legend_text_anti_alias" format="boolean" />
+		<attr name="heat_map_legend_box_anti_alias" format="boolean" />
+	</declare-styleable>
+
+</resources>
