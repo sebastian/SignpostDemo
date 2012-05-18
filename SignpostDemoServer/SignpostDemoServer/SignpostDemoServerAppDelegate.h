@@ -9,27 +9,10 @@
 #import <Cocoa/Cocoa.h>
 #import "MetricHTTPServer.h"
 
-@class GCDAsyncSocket;
-@class GCDAsyncUdpSocket;
-@class SharedCode;
+@class SocketHandler;
 
 @interface SignpostDemoServerAppDelegate : NSObject <NSApplicationDelegate, MetricHTTPServerDelegate> {
-  // TCP measurement server socket
-  dispatch_queue_t socketQueue;
-	GCDAsyncSocket *listenSocket;
-	NSMutableArray *connectedSockets;
-
-	// Jitter test socket
-  dispatch_queue_t jitterSocketQueue;
-	GCDAsyncUdpSocket *jitterSocket;
-  
-	BOOL isRunning;
-
-  // Code for common functionality... nasty design.
-  SharedCode *commFunc;
-  
-  NSMutableDictionary *userData;
-  dispatch_queue_t latencyAccessQueue;
+  SocketHandler *socketHandler;
 }
 
 @property (assign) IBOutlet NSWindow *window;

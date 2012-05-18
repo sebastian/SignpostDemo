@@ -84,7 +84,6 @@ typedef enum {
 #define READ_TIMEOUT 150.0
 #define READ_TIMEOUT_EXTENSION 100.0
 
-
 @interface SharedCode : NSObject 
 {
   NSData *dataPayload;

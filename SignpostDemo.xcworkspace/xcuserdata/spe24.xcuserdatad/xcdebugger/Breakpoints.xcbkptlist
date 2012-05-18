@@ -21,24 +21,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "SignpostDemoServer/SignpostDemoServer/SignpostDemoServerAppDelegate.m"
-         timestampString = "358961882.128141"
+         timestampString = "359041083.523059"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "225"
-         endingLineNumber = "225"
-         landmarkName = "-updateJitterLabel"
-         landmarkType = "5">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "SignpostDemoServer/SignpostDemoServer/SignpostDemoServerAppDelegate.m"
-         timestampString = "358962270.236594"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "516"
-         endingLineNumber = "516"
+         startingLineNumber = "147"
+         endingLineNumber = "147"
          landmarkName = "-dataResponseForHTTPServer:"
          landmarkType = "5">
       </FileBreakpoint>
