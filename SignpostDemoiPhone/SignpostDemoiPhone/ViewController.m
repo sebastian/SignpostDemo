@@ -435,7 +435,6 @@
 withFilterContext:(id)filterContext 
 {
   double timeDiff = [SharedCode msFromTimestampData:data];
-//  jitterHost = [SharedCode hostFromData:data];
   jitterHost = @"server"; // we are only receiving jitter from server
   [commonFunc addJitterMeasurement:timeDiff forHost:jitterHost];
   serverJitter = [[SharedCode hostJitterFromData:data] doubleValue];
