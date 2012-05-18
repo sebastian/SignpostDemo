@@ -10,6 +10,6 @@
 
 @interface LatencyGoodputView : UIView
 
-- (void)showMeasuredGoodPut:(CGFloat)goodput latency:(CGFloat)latency;
+- (void)showMeasuredGoodPut:(CGFloat)goodput latency:(CGFloat)latency downstream:(BOOL)downstream;
 
 @end

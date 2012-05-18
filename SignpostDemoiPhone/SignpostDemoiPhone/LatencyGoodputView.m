@@ -11,7 +11,7 @@
 
 @implementation LatencyGoodputView
 
-- (void)showMeasuredGoodPut:(CGFloat)goodput latency:(CGFloat)latency
+- (void)showMeasuredGoodPut:(CGFloat)goodput latency:(CGFloat)latency downstream:(BOOL)downstream
 {
   CGFloat viewWidth = self.frame.size.width;
   CGFloat viewHeight = self.frame.size.height;
@@ -33,16 +33,20 @@
   double goodputPosition = normalizedGoodput * viewWidth;
   double latencyPosition = normalizedLatency * viewHeight;
   
-  CircleView *circle = [[CircleView alloc] init];
+  CircleView *circle = [[CircleView alloc] initForDownstream:downstream];
   CGRect circleFrame = circle.frame;
   circleFrame.origin.y = viewHeight - latencyPosition + circleFrame.size.height / 2;
   circleFrame.origin.x = goodputPosition - circleFrame.size.width / 2;
   circle.frame = circleFrame;
   [self addSubview:circle];
-  [UIView animateWithDuration:5.0 animations:^{
-    circle.alpha = 0.0;    
+  [UIView animateWithDuration:2.0 animations:^{
+    circle.alpha = 0.5;    
   } completion:^(BOOL complete) {
-    [circle removeFromSuperview];
+    [UIView animateWithDuration:10.0 animations:^{
+      circle.alpha = 0.0;    
+    } completion:^(BOOL complete) {
+      [circle removeFromSuperview];
+    }];
   }];
 }
 

@@ -88,7 +88,8 @@
     }];
     [socketHandler setGoodputLatencyCallback:^(double downstreamBandwidth, double clientLatency, double upstreamBandwidth, double serverLatency) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        [vc.latencyGoodputView showMeasuredGoodPut:downstreamBandwidth latency:clientLatency];
+        [vc.latencyGoodputView showMeasuredGoodPut:downstreamBandwidth latency:clientLatency downstream:YES];
+        [vc.latencyGoodputView showMeasuredGoodPut:upstreamBandwidth latency:serverLatency downstream:NO];
       });
     }];
   }
@@ -148,7 +149,7 @@
   CGRect meterFrame = CGRectMake(meterX, meterY, needleWidth, needleHeight);
   meter.view.frame = meterFrame;
   [self.view addSubview:meter.view];
-  [meter setMaxValue:1000.0];
+  [meter setMaxValue:1200.0];
   
   [self.view addSubview:self.connectView];
   [self showConnectView];

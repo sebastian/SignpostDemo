@@ -13,7 +13,7 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "41"
          endingLineNumber = "41"
-         landmarkName = "-showMeasuredGoodPut:latency:"
+         landmarkName = "-showMeasuredGoodPut:latency:downstream:"
          landmarkType = "5">
       </FileBreakpoint>
       <FileBreakpoint

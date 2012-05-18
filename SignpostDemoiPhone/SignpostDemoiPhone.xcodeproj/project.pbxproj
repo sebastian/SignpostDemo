@@ -28,6 +28,7 @@
 		0CF5E73D15669EEC00C6803F /* GCDAsyncUdpSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CF5E73B15669EEC00C6803F /* GCDAsyncUdpSocket.m */; };
 		0CF5E74015669F3200C6803F /* SharedCode.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CF5E73F15669F3200C6803F /* SharedCode.m */; };
 		0CF5E75115669F7E00C6803F /* SocketHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CF5E75015669F7E00C6803F /* SocketHandler.m */; };
+		0CF5E7531566B41C00C6803F /* cross.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CF5E7521566B41C00C6803F /* cross.png */; };
 		0CFAFFF815664FA0008CEE28 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CFAFFF715664FA0008CEE28 /* icon.png */; };
 /* End PBXBuildFile section */
 
@@ -65,6 +66,7 @@
 		0CF5E73F15669F3200C6803F /* SharedCode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SharedCode.m; path = ../../SharedCode/SharedCode.m; sourceTree = "<group>"; };
 		0CF5E74F15669F7E00C6803F /* SocketHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SocketHandler.h; path = ../../SharedCode/SocketHandler.h; sourceTree = "<group>"; };
 		0CF5E75015669F7E00C6803F /* SocketHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SocketHandler.m; path = ../../SharedCode/SocketHandler.m; sourceTree = "<group>"; };
+		0CF5E7521566B41C00C6803F /* cross.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cross.png; sourceTree = "<group>"; };
 		0CFAFFED1566490B008CEE28 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		0CFAFFF715664FA0008CEE28 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../icon.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -140,6 +142,7 @@
 		0C4652DF155AB32B004A8398 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				0CF5E7521566B41C00C6803F /* cross.png */,
 				0CFAFFF715664FA0008CEE28 /* icon.png */,
 				0CBC9B611563FA6E00F5AA0E /* ConnectDialog.png */,
 				0CBC9B5F1563DC1300F5AA0E /* needle.png */,
@@ -249,6 +252,7 @@
 				0CBC9B601563DC1300F5AA0E /* needle.png in Resources */,
 				0CBC9B621563FA6E00F5AA0E /* ConnectDialog.png in Resources */,
 				0CFAFFF815664FA0008CEE28 /* icon.png in Resources */,
+				0CF5E7531566B41C00C6803F /* cross.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

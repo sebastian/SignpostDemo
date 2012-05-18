@@ -9,7 +9,12 @@
 #import <UIKit/UIKit.h>
 
 @interface CircleView : UIView
+{
+  BOOL downstream;
+  UIColor *colour;
+  UIImage *cross;
+}
 
-- (id) init;
+- (id) initForDownstream:(BOOL)downstream;
 
 @end
