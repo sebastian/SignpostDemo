@@ -8,6 +8,10 @@
 
 #import "HTTPConnection.h"
 
-@interface MetricHTTPServer : HTTPConnection
+@protocol MetricHTTPServerDelegate
+- (NSData *)dataResponseForHTTPServer:(id)self;
+@end
 
+@interface MetricHTTPServer : HTTPConnection
++ (void)startHTTPServerForDelegate:(id<MetricHTTPServerDelegate>)delegate;
 @end

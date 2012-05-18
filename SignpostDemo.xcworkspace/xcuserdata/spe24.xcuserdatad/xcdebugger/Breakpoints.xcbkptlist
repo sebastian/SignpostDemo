@@ -39,20 +39,7 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "516"
          endingLineNumber = "516"
-         landmarkName = "-udpSocket:didReceiveData:fromAddress:withFilterContext:"
-         landmarkType = "5">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "SignpostDemoServer/SignpostDemoServer/MetricHTTPServer.m"
-         timestampString = "358961759.676857"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "18"
-         endingLineNumber = "18"
-         landmarkName = "-httpResponseForMethod:URI:"
+         landmarkName = "-dataResponseForHTTPServer:"
          landmarkType = "5">
       </FileBreakpoint>
    </FileBreakpoints>

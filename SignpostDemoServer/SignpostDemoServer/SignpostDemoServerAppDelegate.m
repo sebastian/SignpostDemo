@@ -11,7 +11,6 @@
 #import "GCDAsyncUdpSocket.h"
 #import "SharedCode.h"
 #import "ClientData.h"
-#import "HTTPServer.h"
 #import "MetricHTTPServer.h"
 
 #define INTERMEDIATE_READ_TIMEOUT 10.0
@@ -29,12 +28,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Setting up connection
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static id instance;
-+ (id) getMe
-{
-  return instance;
-}
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
@@ -58,19 +51,7 @@ static id instance;
   [self setupJitterMechanics];
   [self performSelectorInBackground:@selector(updateJitterLabel) withObject:nil];
   
-  httpServer = [[HTTPServer alloc] init];
-  [httpServer setType:@"_http._tcp."];
-  [httpServer setPort:8899];
-  [httpServer setConnectionClass:[MetricHTTPServer class]];
-  
-	NSError *error;
-	BOOL success = [httpServer start:&error];
-	if(!success)
-	{
-		NSLog(@"Error starting HTTP Server: %@", [error description]);
-	}
-  
-  instance = self;
+  [MetricHTTPServer startHTTPServerForDelegate:self];
 }
 
 - (void)setupJitterMechanics
@@ -150,6 +131,7 @@ static id instance;
 		[self.startStopButton setTitle:@"Start"];
 	}  
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Misc for logging and displaying info
@@ -252,6 +234,7 @@ static id instance;
     }
   }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - GCDAsyncSocket delegate methods

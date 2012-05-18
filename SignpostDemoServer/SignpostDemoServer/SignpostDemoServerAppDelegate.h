@@ -7,13 +7,13 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "MetricHTTPServer.h"
 
 @class GCDAsyncSocket;
 @class GCDAsyncUdpSocket;
 @class SharedCode;
-@class HTTPServer;
 
-@interface SignpostDemoServerAppDelegate : NSObject <NSApplicationDelegate> {
+@interface SignpostDemoServerAppDelegate : NSObject <NSApplicationDelegate, MetricHTTPServerDelegate> {
   // TCP measurement server socket
   dispatch_queue_t socketQueue;
 	GCDAsyncSocket *listenSocket;
@@ -30,8 +30,6 @@
   
   NSMutableDictionary *userData;
   dispatch_queue_t latencyAccessQueue;
-  
-	HTTPServer *httpServer;
 }
 
 @property (assign) IBOutlet NSWindow *window;
@@ -43,6 +41,6 @@
 
 - (IBAction) pushedStartStopButton:(id)sender;
 
+// MetricHTTPServerDelegate
 - (NSData *)dataResponseForHTTPServer:(id)sender;
-+ (id) getMe;
 @end
