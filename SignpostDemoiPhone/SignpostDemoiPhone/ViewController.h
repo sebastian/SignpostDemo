@@ -8,44 +8,15 @@
 
 #import <UIKit/UIKit.h>
 
-@class GCDAsyncSocket;
-@class GCDAsyncUdpSocket;
 @class SharedCode;
 @class Meter;
 @class LatencyGoodputView;
+@class SocketHandler;
 
 @interface ViewController : UIViewController <UITextFieldDelegate>
 {
-  // Latency and goodput
-  dispatch_queue_t socketQueue;
-	GCDAsyncSocket *socket;
-  
-  // Jitter
-  dispatch_queue_t jitterSocketQueue;
-	GCDAsyncUdpSocket *jitterSocket;
-  
-  // General bookkeeping
-	BOOL isConnected;
-  
-  SharedCode *commonFunc;
-  
-  // For calculating jitter
-  NSUInteger serverJitterPort;
-  NSMutableArray *interarrivalTimesOfJitterMessages;
-  NSDate *lastReceivedMessage;  
-  
-  double serverJitter;
-  double averageJitter;
-  NSString *jitterHost;
-  
+  SocketHandler *socketHandler;
   Meter *meter;
-  
-  double clientLatency;
-  double serverLatency;
-  
-  double downstreamBandwidth;
-  double upstreamBandwidth;
-  NSDate *startTimeLatency, *startTimeBandwidth;
 }
 
 @property (assign) IBOutlet UIButton *connectButton;

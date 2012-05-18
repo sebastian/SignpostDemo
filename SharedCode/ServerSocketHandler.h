@@ -42,7 +42,6 @@ typedef void(^JitterUpdatesCallback)(double, double);
 }
 
 - (id)initWithLogHandlerMessage:(LogHandler)message logHandlerError:(LogHandler)error logHandlerInfo:(LogHandler)info;
-
 - (void)setJitterCallbackUpdate:(JitterUpdatesCallback)callback;
 
 // Returns YES if is running as a result, and NO if it isn't.

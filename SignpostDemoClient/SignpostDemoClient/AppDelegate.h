@@ -8,36 +8,11 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class GCDAsyncSocket;
-@class GCDAsyncUdpSocket;
-@class SharedCode;
+@class SocketHandler;
 
-@interface AppDelegate : NSObject <NSApplicationDelegate> {
-  // Latency and goodput
-  dispatch_queue_t socketQueue;
-	GCDAsyncSocket *socket;
-
-  // Jitter
-  dispatch_queue_t jitterSocketQueue;
-	GCDAsyncUdpSocket *jitterSocket;
-
-  // General bookkeeping
-	BOOL isConnected;
-    
-  SharedCode *commonFunc;
-  
-  // For calculating jitter
-  NSUInteger serverJitterPort;
-  NSMutableArray *interarrivalTimesOfJitterMessages;
-  NSDate *lastReceivedMessage;
-  
-  // The jitter seen by the server
-  double serverJitter;
-  NSString *serverhost;
-  
-  double clientLatency;
-  double serverLatency;
-  NSDate *startTimerLatency, *startTimerBandwidth;
+@interface AppDelegate : NSObject <NSApplicationDelegate> 
+{
+  SocketHandler *socketHandler;
 }
 
 @property (assign) IBOutlet NSWindow *window;
