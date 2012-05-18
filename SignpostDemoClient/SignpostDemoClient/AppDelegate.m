@@ -367,9 +367,7 @@
                                          withFilterContext:(id)filterContext 
 {
   double timeDiff = [SharedCode msFromTimestampData:data];
-//  serverhost = [SharedCode hostFromData:data];
   serverhost = @"server";
-  NSLog(@"received jitter probe from: %@", serverhost);
   [commonFunc addJitterMeasurement:timeDiff forHost:serverhost];
   serverJitter = [[SharedCode hostJitterFromData:data] doubleValue];
 }

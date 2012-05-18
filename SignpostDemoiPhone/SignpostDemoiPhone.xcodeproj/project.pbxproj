@@ -27,7 +27,7 @@
 		0CBC9B621563FA6E00F5AA0E /* ConnectDialog.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CBC9B611563FA6E00F5AA0E /* ConnectDialog.png */; };
 		0CBC9B65156402A200F5AA0E /* LatencyGoodputView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CBC9B64156402A200F5AA0E /* LatencyGoodputView.m */; };
 		0CBC9B691564031D00F5AA0E /* CircleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CBC9B681564031D00F5AA0E /* CircleView.m */; };
-		0CFAFFEE1566490B008CEE28 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CFAFFED1566490B008CEE28 /* AudioToolbox.framework */; };
+		0CFAFFF815664FA0008CEE28 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CFAFFF715664FA0008CEE28 /* icon.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -63,6 +63,7 @@
 		0CBC9B671564031D00F5AA0E /* CircleView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CircleView.h; sourceTree = "<group>"; };
 		0CBC9B681564031D00F5AA0E /* CircleView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CircleView.m; sourceTree = "<group>"; };
 		0CFAFFED1566490B008CEE28 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		0CFAFFF715664FA0008CEE28 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,7 +71,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0CFAFFEE1566490B008CEE28 /* AudioToolbox.framework in Frameworks */,
 				0CB977221562962300512752 /* QuartzCore.framework in Frameworks */,
 				0C465318155AB9FA004A8398 /* CFNetwork.framework in Frameworks */,
 				0C465308155AB946004A8398 /* Security.framework in Frameworks */,
@@ -86,6 +86,7 @@
 		0C4652C9155AB32B004A8398 = {
 			isa = PBXGroup;
 			children = (
+				0CFAFFF715664FA0008CEE28 /* icon.png */,
 				0C4652DE155AB32B004A8398 /* SignpostDemoiPhone */,
 				0C4652D7155AB32B004A8398 /* Frameworks */,
 				0C4652D5155AB32B004A8398 /* Products */,
@@ -233,6 +234,7 @@
 				0CBC9B5D1563D74F00F5AA0E /* SignpostDemoiPhone.png in Resources */,
 				0CBC9B601563DC1300F5AA0E /* needle.png in Resources */,
 				0CBC9B621563FA6E00F5AA0E /* ConnectDialog.png in Resources */,
+				0CFAFFF815664FA0008CEE28 /* icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
