@@ -17,7 +17,7 @@ typedef void(^LogHandler)(NSString *);
 // The block is called with jitterSeenLocally, jitterSeenByClient
 typedef void(^JitterUpdatesCallback)(double, double);
 
-@interface SocketHandler : NSObject {
+@interface ServerSocketHandler : NSObject {
   // TCP measurement server socket
   dispatch_queue_t socketQueue;
 	GCDAsyncSocket *listenSocket;

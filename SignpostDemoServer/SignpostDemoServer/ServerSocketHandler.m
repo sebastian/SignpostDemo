@@ -6,13 +6,13 @@
 //  Copyright (c) 2012 Kle.io. All rights reserved.
 //
 
-#import "SocketHandler.h"
+#import "ServerSocketHandler.h"
 #import "GCDAsyncSocket.h"
 #import "GCDAsyncUdpSocket.h"
 #import "SharedCode.h"
 #import "ClientData.h"
 
-@implementation SocketHandler
+@implementation ServerSocketHandler
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Setup

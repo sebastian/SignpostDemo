@@ -46,7 +46,7 @@
 		0CFAFFE715654AC9008CEE28 /* DispatchQueueLogFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CFAFFDE15654AC9008CEE28 /* DispatchQueueLogFormatter.m */; };
 		0CFAFFE815654AC9008CEE28 /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0CFAFFDF15654AC9008CEE28 /* README.txt */; };
 		0CFAFFEC15654AFC008CEE28 /* MetricHTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CFAFFEB15654AFC008CEE28 /* MetricHTTPServer.m */; };
-		0CFAFFFB15667DF6008CEE28 /* SocketHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CFAFFFA15667DF6008CEE28 /* SocketHandler.m */; };
+		0CFAFFFB15667DF6008CEE28 /* ServerSocketHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CFAFFFA15667DF6008CEE28 /* ServerSocketHandler.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -128,8 +128,8 @@
 		0CFAFFDF15654AC9008CEE28 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		0CFAFFEA15654AFC008CEE28 /* MetricHTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MetricHTTPServer.h; sourceTree = "<group>"; };
 		0CFAFFEB15654AFC008CEE28 /* MetricHTTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MetricHTTPServer.m; sourceTree = "<group>"; };
-		0CFAFFF915667DF6008CEE28 /* SocketHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SocketHandler.h; sourceTree = "<group>"; };
-		0CFAFFFA15667DF6008CEE28 /* SocketHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SocketHandler.m; sourceTree = "<group>"; };
+		0CFAFFF915667DF6008CEE28 /* ServerSocketHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; path = ServerSocketHandler.h; sourceTree = "<group>"; };
+		0CFAFFFA15667DF6008CEE28 /* ServerSocketHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ServerSocketHandler.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -206,8 +206,8 @@
 				0C3E39851557E6F200BA33C3 /* SignpostDemoServerAppDelegate.h */,
 				0C3E39861557E6F200BA33C3 /* SignpostDemoServerAppDelegate.m */,
 				0C3E394E1557E6AD00BA33C3 /* Supporting Files */,
-				0CFAFFF915667DF6008CEE28 /* SocketHandler.h */,
-				0CFAFFFA15667DF6008CEE28 /* SocketHandler.m */,
+				0CFAFFF915667DF6008CEE28 /* ServerSocketHandler.h */,
+				0CFAFFFA15667DF6008CEE28 /* ServerSocketHandler.m */,
 			);
 			path = SignpostDemoServer;
 			sourceTree = "<group>";
@@ -457,7 +457,7 @@
 				0CFAFFE615654AC9008CEE28 /* ContextFilterLogFormatter.m in Sources */,
 				0CFAFFE715654AC9008CEE28 /* DispatchQueueLogFormatter.m in Sources */,
 				0CFAFFEC15654AFC008CEE28 /* MetricHTTPServer.m in Sources */,
-				0CFAFFFB15667DF6008CEE28 /* SocketHandler.m in Sources */,
+				0CFAFFFB15667DF6008CEE28 /* ServerSocketHandler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -8,7 +8,7 @@
 
 #import "SignpostDemoServerAppDelegate.h"
 #import "MetricHTTPServer.h"
-#import "SocketHandler.h"
+#import "ServerSocketHandler.h"
 #import "ClientData.h"
 #import "SharedCode.h"
 
@@ -28,7 +28,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-  socketHandler = [[SocketHandler alloc] initWithLogHandlerMessage:^(NSString *msg) {
+  socketHandler = [[ServerSocketHandler alloc] initWithLogHandlerMessage:^(NSString *msg) {
     dispatch_async(dispatch_get_main_queue(), ^{
       @autoreleasepool {
         [self logMessage:msg];

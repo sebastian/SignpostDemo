@@ -9,10 +9,10 @@
 #import <Cocoa/Cocoa.h>
 #import "MetricHTTPServer.h"
 
-@class SocketHandler;
+@class ServerSocketHandler;
 
 @interface SignpostDemoServerAppDelegate : NSObject <NSApplicationDelegate, MetricHTTPServerDelegate> {
-  SocketHandler *socketHandler;
+  ServerSocketHandler *socketHandler;
 }
 
 @property (assign) IBOutlet NSWindow *window;
