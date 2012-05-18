@@ -58,7 +58,6 @@
   CGFloat needleY = frame.origin.y - needleHeight - 2;
 
   // The needle itself
-//  CGRect needleFrame = CGRectMake(needleX, needleY, needleWidth, needleHeight);
   CGRect needleFrame = CGRectMake(needleX, needleY, needleWidth, needleHeight);
   needleView = [[UIImageView alloc] initWithFrame:needleFrame];
   needleView.layer.anchorPoint = CGPointMake(0.5, 0.05);
