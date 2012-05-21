@@ -121,7 +121,7 @@
   @autoreleasepool 
   {
     struct timespec a;
-    NSInteger val = 400000000;
+    NSInteger val = 200000000;
     a.tv_nsec = val;
     a.tv_sec = 0;
     
