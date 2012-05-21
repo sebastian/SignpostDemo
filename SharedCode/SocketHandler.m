@@ -162,7 +162,14 @@
   callbackLogInfo(FORMAT(@"Connected to %@:%i", host, port));
   controlsToggleCallback(YES);
   
-  NSString *hostname = FORMAT(@"%@:%i", [sock localHost], [sock localPort]);
+#if TARGET_OS_IPHONE
+  // Compiling for iOS
+  NSString *hostname = FORMAT(@"iOS:%@:%i", [sock localHost], [sock localPort]);
+#else
+  // Compiling for Mac OS X
+  NSString *hostname = [[NSHost currentHost] localizedName];  
+#endif
+
   commonFunc.hostname = hostname;
   
   // Tell the other end that we want to start jitter measurements on the port we are listening to.
