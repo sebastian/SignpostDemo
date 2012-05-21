@@ -79,7 +79,6 @@
 	{
 		// Stop accepting connections
 		[socket disconnect];
-    [jitterSocket close];
     
     callbackLogInfo(FORMAT(@"Disconnected from %@:%i.", host, port));
     controlsToggleCallback(NO);
@@ -104,7 +103,6 @@
 - (void)connectionTerminated
 {
   isConnected = NO;
-  [jitterSocket close];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +127,6 @@
     {
       nanosleep(&a, NULL);
       double localJitter = [[commonFunc currentJitterForHost:serverhost] doubleValue];
-      NSLog(@"###### UPDATING JITTER LABEL TO %f - %f", localJitter, serverJitter);
       jitterUpdatesCallback(localJitter, serverJitter);
     }
   }
@@ -154,12 +151,14 @@
 
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err
 {
+  isConnected = NO;
   callbackLogInfo(FORMAT(@"Socket was closed."));
   controlsToggleCallback(NO);
   [self connectionTerminated];
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port {
+  isConnected = YES;
   callbackLogInfo(FORMAT(@"Connected to %@:%i", host, port));
   controlsToggleCallback(YES);
   
@@ -176,38 +175,31 @@
   // Tell the other end that we want to start jitter measurements on the port we are listening to.
   [socket writeData:[SharedCode payloadForString:hostname] withTimeout:-1 tag:CLIENTID];
   [socket writeData:[SharedCode intToData:[jitterSocket localPort]] withTimeout:-1 tag:CLIENTJITTERPORT];
-  NSLog(@"Write clientjitterport in didConnectToHost: %@:%i", host, port);
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag {
   switch (tag) {
     case PING:
       startTimerLatency = [commonFunc startLatencyMeasurement];
-      NSLog(@"Sent ping");
       break;
       
     case PONG:
       startTimerBandwidth = [commonFunc startBandwidthMeasurement];
-      NSLog(@"Sent pong");
       break;
       
     case DOWNSTREAM_BW:
       // We sent the downstream bandwidth number to the server
-      NSLog(@"Sent downstream bandwidth");
       break;
       
     case DATAFROMCLIENT:
       // We sent the data payload to measure upstream bandwidth
-      NSLog(@"Sent data from client");
       break;
       
     case CLIENTID:
-      NSLog(@"Sent clientId");
       break;
       
     case CLIENTJITTERPORT:
       [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:SERVERJITTERPORT];
-      NSLog(@"Registered to read SERVERJITTERPORT after sending CLIENTJITTERPORT");
       // We told the server which port we are listening on.
       break;
       
@@ -230,8 +222,6 @@
       [commonFunc setNumberOfBytesForDataMeasurements:numBytesToExpect];
       [socket readDataToLength:numBytesToExpect withTimeout:READ_TIMEOUT tag:DATAFROMSERVER];
       
-      NSLog(@"Received pang, sent pong, waiting for datafromserver");
-      
       callbackLogInfo(FORMAT(@"Latency: %fms", clientLatency));
       break;
     } 
@@ -243,8 +233,6 @@
       NSData *data = [SharedCode intToData:downstreamBandwidthInKb];
       [socket writeData:data withTimeout:-1 tag:DOWNSTREAM_BW];
       [socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:PENG];
-      
-      NSLog(@"Received datafromserver, sent downstream_bw, waiting for peng");
       
       callbackLogInfo(FORMAT(@"Downstream bandwidth: %f", mbitsPerSecond));
       
@@ -261,8 +249,7 @@
       
       serverLatency = (double) [SharedCode dataToInt:data] / 1000.0;
       callbackLogInfo(FORMAT(@"Server latency: %f", serverLatency));
-      
-      NSLog(@"Received peng, sent datafromclient, waiting for upstrambw");
+
       break;
     }
       
@@ -271,8 +258,6 @@
       NSInteger upstreamBandwidthInKbit = [SharedCode dataToInt:data];
       upstreamBandwidth = (double) upstreamBandwidthInKbit / 1000.0;
       callbackLogInfo(FORMAT(@"Upstream bandwidth: %f", upstreamBandwidth));
-      NSLog(@"Received upstream_bw, did nothing in return");
-
       goodputLatencyCallback(downstreamBandwidth, clientLatency, upstreamBandwidth, serverLatency);
       
       // Start the next round of measurements
@@ -297,7 +282,6 @@
       [commonFunc performSelectorInBackground:@selector(performJitterMeasurements:) withObject:infoDict];        
 
       dispatch_async(dispatch_get_main_queue(), ^{
-        NSLog(@"#### Starting ping pang pong");
         [self startPingPangPongData];
       });
 

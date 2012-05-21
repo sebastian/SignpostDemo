@@ -88,7 +88,6 @@
   if(!isRunning)
 	{
     // Adjust how many bytes we are going to use for the bandwidth measurements
-    NSLog(@"Setting num kbytes to use to: %ld", numKBytesToUse);
     if (numKBytesToUse == 0)
       numKBytesToUse = 5120; // 500kbytes
     [commFunc setNumberOfBytesForDataMeasurements:(numKBytesToUse * 1000)];
@@ -105,7 +104,6 @@
 			return NO;
 		}
     NSString *hostname = FORMAT(@"%@:%i", [listenSocket localHost], [listenSocket localPort]); 
-    NSLog(@"Setting hostname to: %@", hostname);
     commFunc.hostname = hostname;
     
     callbackLogInfo(FORMAT(@"Signpost demo server started on port %hu", [listenSocket localPort]));
@@ -222,7 +220,6 @@
         cd.startTimeLatency = startTimeLatency;
         [userData setObject:cd forKey:id];          
       }
-      NSLog(@"Sent PANG");
       break;
     }
     case DATAFROMSERVER:
@@ -242,18 +239,15 @@
         cd.startTimeBandwidth = startTimeBandwidth;
         [userData setObject:cd forKey:id];          
       }
-      NSLog(@"Sent PENG");
       break;
     }
     case UPSTREAM_BW:
     {
       // Sent the upstream bandwidth data back to the client;
-      NSLog(@"Sent UPSTREAM_BW");
       break;
     } 
     case SERVERJITTERPORT:
     {
-      NSLog(@"Sent SERVERJITTERPORT");
       // We sent the client the jitter port we are listening to
       break;
     } 
@@ -273,7 +267,6 @@
       // should expect, but also send!
       [sock writeData:[SharedCode intToData:[commFunc numBytesToReadForData]] withTimeout:-1 tag:PANG];
       [sock readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:PONG];
-      NSLog(@"Received ping, wrote pang, waiting for pong");
       break;
     }
       
@@ -294,8 +287,7 @@
       
       [sock writeData:[commFunc dataPayload] withTimeout:-1 tag:DATAFROMSERVER];
       [sock readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:DOWNSTREAM_BW];
-      
-      NSLog(@"Received pong, sent datafromserver, waiting for downstream_bw");
+
       break;
     }
       

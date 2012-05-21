@@ -42,7 +42,6 @@
 {
   if (numBytesForData != numBytes)
   {
-    NSLog(@"This required a byte adjustment. The data cache is removed");
     // The amount of data to send/expect has changed.
     numBytesForData = numBytes;
     // Reset the data payload so the right one is used the next time.

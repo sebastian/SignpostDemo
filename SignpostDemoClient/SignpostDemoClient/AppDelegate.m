@@ -50,18 +50,19 @@
   [socketHandler setControlsToggleCallback:^(BOOL enableControls) {
     dispatch_async(dispatch_get_main_queue(), ^{
       @autoreleasepool {
-        [self.hostField setEnabled:enableControls];
-        [self.portField setEnabled:enableControls];
-        if (enableControls)
-          [self.connectButton setTitle:@"Connect"];
-        else 
+        [self.hostField setEnabled:!enableControls];
+        [self.portField setEnabled:!enableControls];
+        if (enableControls) {
           [self.connectButton setTitle:@"Disconnect"];
+        } else {
+          [self.connectButton setTitle:@"Connect"];
+        }
       }
     });    
   }];
   [socketHandler setGoodputLatencyCallback:^(double downstreamBandwidth, double clientLatency, double upstreamBandwidth, double serverLatency) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      NSLog(@"Got measurements and stuff");
+      // Nothing to do here on the client
     });
   }];
   

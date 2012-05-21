@@ -46,23 +46,22 @@
   [self addMeterAndConnectionView];
   if (socketHandler == nil) 
   {
-    NSLog(@"Setting up socket handler");
     socketHandler = [[SocketHandler alloc] initWithLogHandlerMessage:^(NSString *msg) {
       dispatch_async(dispatch_get_main_queue(), ^{
         @autoreleasepool {
-          NSLog(@"MESSAGE: %@", msg);
+          // The iPhone client does not deal with messages
         }
       });
     } logHandlerError:^(NSString *errorStr) {
       dispatch_async(dispatch_get_main_queue(), ^{
         @autoreleasepool {
-          NSLog(@"ERROR: %@", errorStr);
+          // The iPhone client does not currently report error messages.
         }
       });
     } logHandlerInfo:^(NSString *infoStr) {
       dispatch_async(dispatch_get_main_queue(), ^{
         @autoreleasepool {
-          NSLog(@"INFO: %@", infoStr);
+          // The iPhone client does not display info messages
         }
       });    
     }];
@@ -157,7 +156,6 @@
 
 - (void)showConnectView
 {
-  NSLog(@"Showing connection view");
   [UIView animateWithDuration:1 animations:^{
     CGRect newFrame = self.connectViewControls.frame;
     newFrame.origin.y = 0;
@@ -169,7 +167,6 @@
 
 - (void)hideConnectView
 {
-  NSLog(@"Hiding connection view");
   [UIView animateWithDuration:1 animations:^{
     CGRect newFrame = self.connectViewControls.frame;
     newFrame.origin.y = -300;
