@@ -159,6 +159,8 @@
       NSNumber *clientLatency = [NSNumber numberWithFloat:cd.clientLatency];
       NSNumber *serverLatency = [NSNumber numberWithFloat:cd.serverLatency];
       NSNumber *serverJitter = [cf currentJitterForHost:hostid];
+      if (serverJitter == nil) 
+        serverJitter = [NSNumber numberWithInt:-1];
       NSNumber *clientJitter = [NSNumber numberWithFloat:cd.clientPerceivedJitter];
       
       NSArray *uk = [NSArray arrayWithObjects:@"id", @"downstream-bandwidth", @"upstream-bandwidth", @"latency-as-seen-by-client", @"latency-as-seen-by-server", @"jitter-as-seen-by-server", @"jitter-as-seen-by-client", nil];
