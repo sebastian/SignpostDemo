@@ -34,8 +34,6 @@
     jitterSocketQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     jitterSocket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:jitterSocketQueue];
     
-    isConnected = NO;
-    
     commonFunc = [[SharedCode alloc] init];
     
     // Setup and start listening to the jitter port
@@ -66,7 +64,7 @@
   if ([host isEqualToString:@""])
     host = @"localhost";
   
-  if(!isConnected)
+  if(![socket isConnected])
 	{
     NSError *error = nil;
     if (![socket connectToHost:host onPort:port error:&error]) {
@@ -100,10 +98,6 @@
   goodputLatencyCallback = callback;
 }
 
-- (void)connectionTerminated
-{
-  isConnected = NO;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Action GOOOO
@@ -151,14 +145,11 @@
 
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err
 {
-  isConnected = NO;
   callbackLogInfo(FORMAT(@"Socket was closed."));
   controlsToggleCallback(NO);
-  [self connectionTerminated];
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port {
-  isConnected = YES;
   callbackLogInfo(FORMAT(@"Connected to %@:%i", host, port));
   controlsToggleCallback(YES);
   

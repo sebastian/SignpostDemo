@@ -29,9 +29,6 @@ typedef void(^GoodputLatency)(double, double, double, double);
   dispatch_queue_t jitterSocketQueue;
 	GCDAsyncUdpSocket *jitterSocket;
   
-  // General bookkeeping
-	BOOL isConnected;
-  
   SharedCode *commonFunc;
   
   // For calculating jitter

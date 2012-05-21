@@ -130,7 +130,7 @@
 		}
 		
     callbackLogInfo(@"Stopped Signpost demo server");
-		isRunning = false;
+		isRunning = NO;
 
 		return NO;
 	}
