@@ -12,7 +12,6 @@
 {
   BOOL downstream;
   UIColor *colour;
-  UIImage *cross;
 }
 
 - (id) initForDownstream:(BOOL)downstream;

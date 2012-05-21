@@ -23,7 +23,6 @@
   else
   {
     colour = [UIColor redColor];
-    cross = [UIImage imageNamed:@"cross.png"];
   }
     
 
@@ -46,18 +45,28 @@
     
   CGContextSetFillColorWithColor(graphicsContext, colour.CGColor);
   CGRect circleRect;
+
+  CGColorRef black = [UIColor blackColor].CGColor;
+  CGContextSetStrokeColorWithColor(graphicsContext, black);
+  CGContextSetLineWidth(graphicsContext, 1.0);
   
   if (downstream) 
   {
     circleRect = CGRectMake(0, 0, CIRCLESIZE, CIRCLESIZE);
     CGContextFillEllipseInRect(graphicsContext, circleRect);
-    [cross drawInRect:CGRectMake(0, 0, CIRCLESIZE, CIRCLESIZE)];
+    
+    // Horizontal line
+    CGContextMoveToPoint(graphicsContext, 0, CIRCLESIZE/2);
+    CGContextAddLineToPoint(graphicsContext, CIRCLESIZE, CIRCLESIZE/2);
+
+    // Vertical line
+    CGContextMoveToPoint(graphicsContext, CIRCLESIZE/2, 0);
+    CGContextAddLineToPoint(graphicsContext, CIRCLESIZE/2, CIRCLESIZE);
+    
+    CGContextStrokePath(graphicsContext);
   }
   else
   {
-    CGColorRef black = [UIColor blackColor].CGColor;
-    CGContextSetStrokeColorWithColor(graphicsContext, black);
-
     circleRect = CGRectMake(1, 1, CIRCLESIZE-2, CIRCLESIZE-2);
     CGContextStrokePath(graphicsContext);
     CGContextStrokeEllipseInRect(graphicsContext, circleRect);
