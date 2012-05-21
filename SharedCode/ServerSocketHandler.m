@@ -30,7 +30,7 @@
     
     // Setup queues needed
     socketQueue = dispatch_queue_create("socketQueue", NULL);
-    jitterSocketQueue = dispatch_queue_create("jitterSocketQueue", NULL);
+    jitterSocketQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     latencyAccessQueue = dispatch_queue_create("jitterSocketQueue", NULL); 
 
     // Setup socket for TCP connection that will be used for goodput and latency measurements
@@ -429,6 +429,7 @@ withFilterContext:(id)filterContext
   double timeDiff = [SharedCode msFromTimestampData:data];
   NSString *host = [SharedCode hostFromData:data];
   double clientJitter = [[SharedCode hostJitterFromData:data] doubleValue];
+  [commFunc addJitterMeasurement:timeDiff forHost:host];
   @synchronized(userData) {
     ClientData *cd = [userData objectForKey:host];
     if (cd == nil)
@@ -436,7 +437,6 @@ withFilterContext:(id)filterContext
     cd.clientPerceivedJitter = clientJitter;
     [userData setObject:cd forKey:host];      
   }
-  [commFunc addJitterMeasurement:timeDiff forHost:host];
 }
 
 @end

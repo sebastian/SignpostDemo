@@ -31,7 +31,7 @@
     socketQueue = dispatch_queue_create("socketQueue", NULL);
     socket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:socketQueue];
     
-    jitterSocketQueue = dispatch_queue_create("jitterSocketQeueue", NULL);
+    jitterSocketQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     jitterSocket = [[GCDAsyncUdpSocket alloc] initWithDelegate:self delegateQueue:jitterSocketQueue];
     
     isConnected = NO;
@@ -129,6 +129,7 @@
     {
       nanosleep(&a, NULL);
       double localJitter = [[commonFunc currentJitterForHost:serverhost] doubleValue];
+      NSLog(@"###### UPDATING JITTER LABEL TO %f - %f", localJitter, serverJitter);
       jitterUpdatesCallback(localJitter, serverJitter);
     }
   }
