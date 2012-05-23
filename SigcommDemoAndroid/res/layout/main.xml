@@ -4,13 +4,8 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="118dp"
-        android:layout_height="0dp"
-        android:layout_weight="0.61"
-        android:text="Latency"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
+    
+ <!-- 
 
     <EditText
         android:id="@+id/latencyTextboxDownstream"
@@ -25,14 +20,6 @@
         android:layout_height="wrap_content"
         android:ems="10" />
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="0.65"
-        android:text="Goodput"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
- <!-- 
     <EditText
         android:id="@+id/goodputTextboxDownstream"
         android:layout_width="match_parent"
@@ -70,8 +57,56 @@
         android:layout_height="wrap_content" 
         android:stretchColumns="0,1">
 
+
+
+
         <TableRow
             android:id="@+id/tableRow1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+    
+	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
+		android:layout_height="135dp" android:id="@+id/graphLatency" 		
+        android:layout_weight="1"/>
+	
+		</TableRow>
+		
+        
+        
+        <TableRow
+            android:id="@+id/tableRow2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+    
+	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
+		android:layout_height="135dp" android:id="@+id/graphGoodput" 		
+        android:layout_weight="1"/>
+	
+		</TableRow>
+		
+        
+        <TableRow
+            android:id="@+id/tableRow3"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+    
+	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
+		android:layout_height="135dp" android:id="@+id/graphJitter" 		
+        android:layout_weight="1"/>
+	
+		</TableRow>
+		
+    </TableLayout>
+        
+        
+    <TableLayout
+        android:id="@+id/tableLayout2"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" 
+        android:stretchColumns="0,1">
+        
+        <TableRow
+            android:id="@+id/tableRow4"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" >
             
@@ -87,14 +122,8 @@
     
     
         </TableRow>
-
+        
     </TableLayout>
-    
-    
-	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
-		android:layout_height="150dp" android:id="@+id/example_graph" 		
-        android:layout_weight="1"/>
-	
 	
 
 </LinearLayout>

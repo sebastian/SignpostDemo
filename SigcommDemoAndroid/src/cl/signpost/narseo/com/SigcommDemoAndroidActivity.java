@@ -1,5 +1,7 @@
 package cl.signpost.narseo.com;
 
+import java.util.Random;
+
 import com.google.gson.Gson;
 
 import android.app.Activity;
@@ -20,6 +22,7 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
 
+import uk.ac.cam.cl.dtg.snowdon.*;
 
 
 
@@ -36,15 +39,14 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	private PowerManager.WakeLock mWakeLock;
 	private static Button startButton = null;
 	private static Button stopButton = null;
-	private static EditText latencyUpstream = null;
-	private static EditText latencyDownstream = null;
-	private static EditText goodputUpstream = null;
-	private static EditText goodputDownstream = null;
 	private static EditText jitter = null;
 	private static Intent mServiceIntent;
 	private DataUpdateReceiver dataUpdateReceiver;
 
-	private static WebView  myWebView;
+
+	private GraphView mGoodputGraph;
+	private GraphView mLatencyGraph;
+	private GraphView mJitterGraph;
 	
 	public static final String REFRESH_DATA = "SIGNPOST_VALUE";
 	public static final String REFRESH_LATENCYUPSTREAM_INTENT = "LATENCYUPSTREAM";
@@ -59,14 +61,37 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	public static final int GOODPUT_UPSTREAM_ID = 2;
 	public static final int GOODPUT_DOWNSTREAM_ID = 3;
 	public static final int JITTER_ID = 4;
+	public static final int UPSTREAM = 0;
+	public static final int DOWNSTREAM = 1;
 
-	//public static final String IP_ADDRESS = "192.168.";
+
 	public static final int TCP_PORT = 7777;
+	public static final int [] IP_ADDR = {192, 168, 15, 215};
 	
-	public static final int MAX_HISTORIC_VALS = 5;
-	public static int [] arrayDownstreamBwidth = {0, 0, 0, 0, 0};
-	public static int [] arrayDownstreamLatency = {0, 0, 0, 0, 0};
+	private static final int MAX_HISTORIC_VALS = 40;
+	private static float [] arrayDownstreamBandwidth = new float[MAX_HISTORIC_VALS];
+	private static float [] arrayUpstreamBandwidth = new float[MAX_HISTORIC_VALS];
+	private static float [] arrayDownstreamLatency = new float[MAX_HISTORIC_VALS];
+	private static float [] arrayUpstreamLatency = new float[MAX_HISTORIC_VALS];
+	private static float [] timestampDownstreamBandwidth = new float[MAX_HISTORIC_VALS];
+	private static float [] timestampUpstreamBandwidth = new float[MAX_HISTORIC_VALS];
+	private static float [] timestampDownstreamLatency = new float[MAX_HISTORIC_VALS];
+	private static float [] timestampUpstreamLatency = new float[MAX_HISTORIC_VALS];
+	private static float maxTimestampBandwidth = 0.0f;
+	private static float minTimestampBandwidth = 0.0f;
 	
+	//Parameters about the configuration of the plots, ticks, axis, etc
+    private static String [] yTicksLabelsBandwidth = new String []{"0", "5", "10", "15", "20"};
+    private static float [] yTicksPosBandwidth = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+    private static String [] yTicksLabelsLatency = new String []{"0", "0.25", "0.5", "0.75", "1"};
+    private static String [] yTicksLabelsJitter = new String []{"0", "2", "4", "6", "8", "10"};
+    private static float [] yTicksPosJitter = new float []{0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f};
+    //Default values
+    private static String [] xTicksLabelsTime = new String []{"0s"};
+    private static float [] xTicksPosBandwidth = new float []{1.0f};
+	private static long startTime = 0;
+	private static float maxValBandwidth=0.0f;
+	private static float minValBandwidth=0.0f;
 	
     /** Called when the activity is first created. */
     @Override
@@ -77,41 +102,64 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         startButton.setOnClickListener(this);   
         stopButton =(Button) findViewById(R.id.stopTest);        
         stopButton.setOnClickListener(this);  
-        latencyUpstream = (EditText) findViewById (R.id.latencyTextboxUpstream);
-        latencyDownstream = (EditText)findViewById(R.id.latencyTextboxDownstream);
-        goodputUpstream = (EditText)findViewById(R.id.goodputTextboxUpstream);
-        goodputDownstream = (EditText) findViewById(R.id.goodputTextboxDownstream);
-        //jitter = (EditText) findViewById(R.id.jitterTextbox);
+        
+        for (int i=0; i<MAX_HISTORIC_VALS; i++){
+        	arrayDownstreamBandwidth [i] = 0.0f;
+        	arrayUpstreamBandwidth [i] = 0.0f;
+        	timestampDownstreamBandwidth [i] = 0.0f;
+        	timestampUpstreamBandwidth [i] = 0.0f;
+        	timestampDownstreamLatency [i] = 0.0f;
+        	timestampUpstreamLatency [i] = 0.0f;
+        }
+
+        mGoodputGraph = (GraphView) findViewById(R.id.graphGoodput);
+        mLatencyGraph = (GraphView) findViewById (R.id.graphLatency);
+        mJitterGraph = (GraphView) findViewById (R.id.graphJitter);
+        
+        mGoodputGraph.setYAxisLabel("Goodput (Mbps)");
+        //mGoodputGraph.setXAxisLabel("Elapsed Time (s)");
+        
+        mLatencyGraph.setYAxisLabel("Latency (s)");
+        //mLatencyGraph.setXAxisLabel("Elapsed Time (s)");
+        
+        mJitterGraph.setYAxisLabel("Jitter (ms)");
+        mJitterGraph.setXAxisLabel("Elapsed Time (s)");
         
         
-        /*
-         * Copy web content to sdcard
-         */
         
+        //Set the labels for the x and y axis. 
+        //X axis (time) only one initially for 0s in 0.5f
+        mGoodputGraph.setYLabels(yTicksLabelsBandwidth);
+        mGoodputGraph.setYLabelPositions(yTicksPosBandwidth);        
+        mGoodputGraph.setXLabels(xTicksLabelsTime);
+        mGoodputGraph.setXLabelPositions(xTicksPosBandwidth);
         
-        Log.i(TAG, "Signpost Demo OnCreate()");
+        mLatencyGraph.setYLabels(yTicksLabelsLatency);
+        mLatencyGraph.setYLabelPositions(yTicksPosBandwidth);    
+        mLatencyGraph.setXLabels(xTicksLabelsTime);
+        mLatencyGraph.setXLabelPositions(xTicksPosBandwidth);   
+        
+        mJitterGraph.setYLabels(yTicksLabelsJitter);
+        mJitterGraph.setYLabelPositions(yTicksPosJitter);    
+        mJitterGraph.setXLabels(xTicksLabelsTime);
+        mJitterGraph.setXLabelPositions(xTicksPosBandwidth);
         
         //Get lock manager
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "My Tag");
         mWakeLock.acquire();
         
+        //Register receiver to obtain data from service
         if (dataUpdateReceiver == null) dataUpdateReceiver = new DataUpdateReceiver();
         IntentFilter intentFilter = new IntentFilter(REFRESH_DATA);
-        registerReceiver(dataUpdateReceiver, intentFilter);
-        
-        //Create references to textBoxes and buttons
+        registerReceiver(dataUpdateReceiver, intentFilter);        
+        Log.i(TAG, "Signpost Demo Activity. GUI created and resources allocated");
     }
     
-    
-    public void copyWebContent(){
-    	
-    }
     
     
     public void onDestroy(){
-    	super.onDestroy();
-    	
+    	super.onDestroy();    	
     	Log.i(TAG, "OnDestroy: release wakelock");
     	mWakeLock.release();
     }
@@ -119,7 +167,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 
     public void onPause(){
     	super.onDestroy();
-    	//if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);
     }
     
     
@@ -130,15 +177,12 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    	case R.id.startTest:
 	    		Log.i(TAG, "Start button pressed");
 	    		//Start Background service
-
 	    		
-	    		SigcommDemoAndroidService.setMainActivity(this, "192.168.15.215", 7777);
-	    		//SigcommDemoAndroidService.setMainActivity(this, "192.168.15.36", 7777);
-	    		//Intent intent = new Intent(this, TrackingService.class);
-	    		//startService(intent);
+	    		SigcommDemoAndroidService.setMainActivity(this, IP_ADDR, TCP_PORT);
 	    		mServiceIntent = new Intent(this, SigcommDemoAndroidService.class);
 	    		bindService (mServiceIntent, mConnection, Context.BIND_AUTO_CREATE);
 	    		
+	    		startTime = System.currentTimeMillis();
 	    		break;
 	    	case R.id.stopTest:
 	    		Log.i(TAG, "Stop button pressed");
@@ -171,7 +215,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     private ServiceConnection mConnection = new ServiceConnection(){
     	public void onServiceConnected (ComponentName className, IBinder service){
     		SigcommDemoAndroidService mService = ((LocalBinder<SigcommDemoAndroidService>) service).getService();
-    		
     	}
     	public void onServiceDisconnected(ComponentName className){
     		
@@ -182,60 +225,127 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(REFRESH_DATA)) {
-            	
-            //Do stuff - maybe update my view based on the changed DB contents
             	int valueLatencyUpstream = intent.getIntExtra(REFRESH_LATENCYUPSTREAM_INTENT, -1);
             	if (valueLatencyUpstream>-1){
                 	Log.i(TAG, "Received Latency Upstream: "+valueLatencyUpstream);
-                	latencyUpstream.setText(valueLatencyUpstream+" microsec.");
+                	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
+                	updateTimestampArray(timestampUpstreamLatency,elapsedTime);                	
+                	arrayUpstreamLatency = updateHistoricValFloat(arrayUpstreamLatency, (float)valueLatencyUpstream/1000.0f); 
+                	//plotLatencyPairs(timestampDownstreamLatency, arrayDownstreamLatency, timestampUpstreamLatency, arrayUpstreamLatency);
             	}
 
             	int valueLatencyDownstream = intent.getIntExtra(REFRESH_LATENCYDOWNSTREAM_INTENT, -1);
             	if (valueLatencyDownstream>-1){
                 	Log.i(TAG, "Received Latency Downstream: "+valueLatencyDownstream);
-                	latencyDownstream.setText(valueLatencyDownstream+" microsec.");
-                	arrayDownstreamLatency = updateHistoricVal(arrayDownstreamLatency, valueLatencyDownstream);
-                	
-                	printVals(arrayDownstreamLatency);
-                	
-                	/*Update JSON file with value in sdcard*/
-                	try{
-
-                    	updateJson(arrayDownstreamLatency, LATENCY_DOWNSTREAM_ID);
-                	}
-                	catch(Exception e){
-                		Log.e(TAG, "ERROR WITH GSON parsing: "+e.getMessage());
-                	}
+                	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
+                	updateTimestampArray(timestampDownstreamLatency,elapsedTime);                	
+                	arrayDownstreamLatency = updateHistoricValFloat(arrayDownstreamLatency, (float)valueLatencyDownstream/1000.0f); 
+                	//plotLatencyPairs(timestampDownstreamLatency, arrayDownstreamLatency, timestampUpstreamLatency, arrayUpstreamLatency);
             	}
-            	
-
             	int goodputUpstreamVal = intent.getIntExtra(REFRESH_GOODPUTUPSTREAM_INTENT, -1);
             	if (goodputUpstreamVal>-1){
                 	Log.i(TAG, "Received Goodput Downstream: "+goodputUpstreamVal);
-                	goodputUpstream.setText(goodputUpstreamVal+" kbps.");
+                	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
+                	updateTimestampArray(timestampUpstreamBandwidth,elapsedTime);                	
+                	arrayUpstreamBandwidth = updateHistoricValFloat(arrayUpstreamBandwidth, (float)goodputUpstreamVal/1000.0f); 
+                	//Everything updated at the same time, otherwise time 
+                	//intervals do not match and they might look ugly
+                	plotBandwidthPairs(timestampDownstreamBandwidth, arrayDownstreamBandwidth, timestampUpstreamBandwidth, arrayUpstreamBandwidth);
+                	plotLatencyPairs(timestampDownstreamLatency, arrayDownstreamLatency, timestampUpstreamLatency, arrayUpstreamLatency);
             	}
             	
             	int goodputDownstreamVal = intent.getIntExtra(REFRESH_GOODPUTDOWNSTREAM_INTENT, -1);
             	if (goodputDownstreamVal>-1){
                 	Log.i(TAG, "Received Goodput Downstream: "+goodputDownstreamVal);
-                	arrayDownstreamBwidth = updateHistoricVal(arrayDownstreamBwidth, goodputDownstreamVal);
-                	printVals(arrayDownstreamBwidth);
-                	goodputDownstream.setText(goodputDownstreamVal+" kbps.");
-                	/*Update JSON file with value in sdcard*/
-                	try{
-
-                    	updateJson(arrayDownstreamBwidth, GOODPUT_DOWNSTREAM_ID);
-                	}
-                	catch(Exception e){
-                		Log.e(TAG, "ERROR WITH GSON parsing: "+e.getMessage());
-                	}
-                	
-                	
+                	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
+                	updateTimestampArray(timestampDownstreamBandwidth,elapsedTime);                	
+                	arrayDownstreamBandwidth = updateHistoricValFloat(arrayDownstreamBandwidth, (float)goodputDownstreamVal/1000.0f); 
             	}
-            	//TODO: Extend to the other types
             }
         }
     }
+    
+    public float[] updateTimestampArray (float [] array, float newval){
+    	for (int i=0; i<array.length-1; i++){
+    		array[i]= array[i+1];
+    	}
+    	array[array.length-1]=newval;
+    	if (newval>maxValBandwidth){
+        	maxValBandwidth = newval;    		
+    	}
+    	
+    	if (newval>30.0f){
+        	minValBandwidth = newval-30.0f;
+    	}
+    	else{
+        	if (array[0]>minValBandwidth){
+            	minValBandwidth = array[0];
+        	}    		
+    	}
+    	return array;
+    	
+    }
+    
+
+    public float [] updateHistoricValFloat (float [] array, float newval ){
+    	for (int i=0; i<array.length-1; i++){
+    		array[i]= array[i+1];
+    	}
+    	array[array.length-1]=newval;
+    	return array;
+    }
+    
+    
+    public void plotLatencyPairs (float [] timestampsDownstream, float [] arrayLatencyDownstream, float[] timestampsUpstream, float[] arrayLatencyUpstream){
+    	mLatencyGraph.redraw();        
+
+        float[][] data1 = {timestampsDownstream, arrayLatencyDownstream};
+        float[][] data2={timestampsUpstream, arrayLatencyUpstream};
+        
+        mLatencyGraph.setData(new float[][][]{data1}, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
+        mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
+
+        float midTime = (maxValBandwidth-minValBandwidth)/2.0f+minValBandwidth;
+        float mid = (float)Math.round(midTime*10)/10;
+        float firstquarterTime = (float)Math.round(((midTime-minValBandwidth)/2.0f+minValBandwidth)*10)/10;
+        float secondquarterTime = (float)Math.round(((maxValBandwidth-midTime)/2.0f+midTime)*10)/10;
+        float max = (float)Math.round(maxValBandwidth*10)/10;
+        float min = (float)Math.round(minValBandwidth*10)/10;
+        
+        String [] xTicksLabelsLatency = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
+        float [] xTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        mLatencyGraph.setXLabels(xTicksLabelsLatency);
+        mLatencyGraph.setXLabelPositions(xTicksPosLatency);
+    }
+    
+    public void plotBandwidthPairs (float [] timestampsDownstream, float [] arrayBandwidthDownstream, float[] timestampsUpstream, float[] arrayBandwidthUpstream){
+
+    	// The first dataset must be inputted into the graph using setData to replace the placeholder data already there
+        //mGraph.addData(data1, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+        mGoodputGraph.redraw();
+        
+
+        float[][] data1 = {timestampsDownstream, arrayBandwidthDownstream};
+        float[][] data2={timestampsUpstream, arrayBandwidthUpstream};
+        
+        mGoodputGraph.setData(new float[][][]{data1}, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 20);
+        mGoodputGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 20);
+
+        float midTime = (maxValBandwidth-minValBandwidth)/2.0f+minValBandwidth;
+        float mid = (float)Math.round(midTime*10)/10;
+        float firstquarterTime = (float)Math.round(((midTime-minValBandwidth)/2.0f+minValBandwidth)*10)/10;
+        float secondquarterTime = (float)Math.round(((maxValBandwidth-midTime)/2.0f+midTime)*10)/10;
+        float max = (float)Math.round(maxValBandwidth*10)/10;
+        float min = (float)Math.round(minValBandwidth*10)/10;
+        
+        String [] xTicksLabelsBandwidth = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
+        float [] xTicksPosBandwidth = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        mGoodputGraph.setXLabels(xTicksLabelsBandwidth);
+        mGoodputGraph.setXLabelPositions(xTicksPosBandwidth);
+    }
+    
     
     public void printVals(int [] array){
     	String arrayVals = "";
@@ -245,48 +355,11 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 		Log.i(TAG, "Array Vals: "+arrayVals);
     }
     
-    public int [] updateHistoricVal (int [] array, int newval ){
+    public int [] updateHistoricValInt (int [] array, int newval ){
     	for (int i=0; i<array.length-1; i++){
     		array[i]= array[i+1];
     	}
     	array[array.length-1]=newval;
     	return array;
     }
-    
-    public void updateJson (int [] values, int caseId){
-
-		Gson gson = new Gson();
-		String json = gson.toJson(values);
-		
-    	switch(caseId){
-			case LATENCY_DOWNSTREAM_ID:
-				//Update source file for latency downstream
-				Log.i(TAG, "SERIALIZED DOWNSTREAM LATENCY: "+json);
-				
-				break;
-			case GOODPUT_DOWNSTREAM_ID:
-				Log.i(TAG, "SERIALIZED DOWNSTREAM BWIDTH: "+json);
-				
-			default:
-				Log.i(TAG, "Couldn't update json. Not supported case");
-				break;
-    	}
-    	//Refresh view!
-    }
-    
-    /*
-    public static final String REFRESH_DATA = "SIGNPOST_VALUE";
-	public static final String REFRESH_LATENCYUPSTREAM_INTENT = "LATENCYUPSTREAM";
-	public static final String REFRESH_LATENCYDOWNSTREAM_INTENT = "LATENCYDOWNSTREAM";
-	public static final String REFRESH_JITTER_INTENT = "JITTER";
-	public static final String REFRESH_GOODPUTUPSTREAM_INTENT = "GOODPUTUPSTREAM";
-	public static final String REFRESH_GOODPUTDOWNSTREAM_INTENT = "GOODPUTDOWNSTREAM";
-	
-
-	private static EditText latencyUpstream = null;
-	private static EditText latencyDownstream = null;
-	private static EditText goodputUpstream = null;
-	private static EditText goodputDownstream = null;
-	private static EditText jitter = null;
-	*/
 }

@@ -24,7 +24,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	private static PowerManager.WakeLock wl = null;
 	private static PowerManager pm =null;
 	
-	public static final Boolean DEBUG = false;
+	public static final Boolean DEBUG = true;
 	
 
 	public static final String REFRESH_DATA = "SIGNPOST_VALUE";
@@ -41,15 +41,23 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public static final int GOODPUT_DOWNSTREAM_ID = 3;
 	public static final int JITTER_ID = 4;
 	
+	//Data stream transmitted to server
+	public static final String SEQ_TO_SERVER = "abcdefghijklmnop";
+	
+	//Used to kill the thread
 	public static boolean testAlive = false;
 
 	//Default values
-	public static String SERVER = null;
+	public static int [] SERVER = {192, 168, 1, 1};
 	public static int TCP_PORT = 7777;
-	public static int UDP_PORT = 7777;
+	public static int UDP_LOCAL_PORT = 5522;
 	
+
 	
-	public static void setMainActivity(SigcommDemoAndroidActivity activity, String server, int tcpPort){
+	/*
+	 * Configures parameters and links to main activity
+	 */
+	public static void setMainActivity(SigcommDemoAndroidActivity activity, int [] server, int tcpPort){
 		Log.e(TAG, "Activity added. Task ID: "+activity.getTaskId());
 		MAIN_ACTIVITY=activity;
 		testAlive = true;
@@ -57,6 +65,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		TCP_PORT = tcpPort;
 	}
 
+	/*
+	 * Stops connection thread
+	 */
 	public static void stopThread(){
 		testAlive = false;
 	}
@@ -82,10 +93,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	
 	@Override
 	public void onDestroy () {
-		// TODO Auto-generated method stub
 		Log.e(TAG, "OnDestroy()");
 		super.onDestroy();
-		//Stop the service
 		wl.release();
 		pm = null;
 	}
@@ -94,10 +103,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public void onCreate(){
 		super.onCreate();
 		Log.e(TAG, "OnCreate()");
-		//Create wakelock
 		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		Log.e(TAG, "Power Manager created");
-		//Get Full wakelock to keep screen at full brightness (to make sure we can collect cell ID)
 		wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "WAKELOCK");
 		wl.acquire();
 		Log.e(TAG, "WakeLock acquired by service");
@@ -150,12 +156,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			try{
 				Thread.sleep(1000);
 				counter++;
-				notifyActivity(counter, LATENCY_DOWNSTREAM_ID);
 				Random r = new Random();
-				int bwidth = (r.nextInt()%100)*1000;
-				notifyActivity(bwidth, GOODPUT_DOWNSTREAM_ID);
-				
-				
+				notifyActivity((r.nextInt()%1000)*1000, LATENCY_DOWNSTREAM_ID);
+				notifyActivity((r.nextInt()%1000)*1000, LATENCY_UPSTREAM_ID);
+				notifyActivity((r.nextInt()%20)*1000, GOODPUT_DOWNSTREAM_ID);
+				notifyActivity((r.nextInt()%20)*1000, GOODPUT_UPSTREAM_ID);
 			}
 			catch(Exception e){
 				Log.i(TAG, "ERROR: "+e.getMessage());
@@ -167,40 +172,26 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	//Thread!
 	/*
 	public void run (){
-		//Open TCP Connection to server
 		try{
-			TCP_PORT=7777;
-			int UDP_LOCAL_PORT=5522;
-			int UDP_SERVER_PORT = -1;
-			
-			//To be modified. Add IP dynamically
-			byte[] ipAddr = new byte[]{(byte) 192, (byte) 168, (byte)15, (byte) 215};
+			//Connects to server
+			int UDP_SERVER_PORT = -1;	
+			Socket clientSocket = new Socket(); 
+			byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
 			InetAddress addr = InetAddress.getByAddress(ipAddr);
 		    InetSocketAddress isockAddress = new InetSocketAddress(addr, TCP_PORT);
-		    
-			//InetSocketAddress host = new InetSocketAddress(SERVER, TCP_PORT);
-			if (DEBUG) Log.i(TAG, "Trying to reach server (InetSocketAddress): "+isockAddress.getHostName()+":"+isockAddress.getPort());
-			
-			Socket clientSocket = new Socket(); 
-			clientSocket.connect(isockAddress);
-			
-			if (DEBUG) Log.i(TAG, "Connection succeeded");
+		    clientSocket.connect(isockAddress);			
 			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			String in = null;
+			if (DEBUG) Log.i(TAG, "Connection succeeded");
 			
-			//Send port to Server
+			
+			//3-way handshake. Exchange device type, get udp port
 			outToServer.writeBytes( android.os.Build.DEVICE+":"+android.os.Build.MODEL+ " ("+ android.os.Build.PRODUCT + ")"+"\r\n"+UDP_LOCAL_PORT+"\r\n");
-
-			if (DEBUG) Log.i(TAG, "Local UDP port: "+UDP_LOCAL_PORT+" notified to server");		
-			in = inFromServer.readLine();
-			UDP_SERVER_PORT = Integer.parseInt(in);
-			
+			UDP_SERVER_PORT = Integer.parseInt(inFromServer.readLine());			
 			if (DEBUG) Log.i(TAG, "Server line (string): "+in+" - Server UDP port (int): "+UDP_SERVER_PORT);
 			
-
 			while (testAlive){
-
 				//Ping message
 				long startTime = System.currentTimeMillis();
 				outToServer.writeBytes(Messages.PING+ "\r\n");
@@ -214,55 +205,47 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				
 				Log.i(TAG, "Packet Length (string): "+in+" - Packet Length (int): "+numBytes);
 				long startDownloadTime = System.currentTimeMillis();                
-				//Notify latency to server
 				outToServer.writeBytes(latency+"\r\n");
 				outToServer.flush();
-				//Get Data			
+				
+				
+				//Get Data so we can estimate downstream GOODPUT	
 				char data[] = new char[1024];
                 int overall = 0;
                 while (overall<numBytes)
                 {
                 	overall += inFromServer.read(data, 0, 1024);                	
                 }
-                
-                //in ms
                 int downloadTime = (int)(System.currentTimeMillis() - startDownloadTime)-latency/1000*2;
-                Log.i(TAG, "DOWNLOAD TIME: "+downloadTime);
-                //in kbps
                 int goodputDownstream = 8*numBytes/downloadTime;
                 notifyActivity(goodputDownstream, GOODPUT_DOWNSTREAM_ID);
-                //Notify goodput
 				outToServer.writeBytes(numBytes/downloadTime+ "\r\n");
-				Log.i(TAG, "Updatad goodput: "+numBytes/downloadTime+" mbps");
+				
 				//Wait for server latency
 				int serverLatencyInt = Integer.parseInt(inFromServer.readLine());
 				notifyActivity (serverLatencyInt, LATENCY_DOWNSTREAM_ID);				
 				
-				//Send same amount of bytes. Stimate upstream
-				String seqToServer = "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh";
+				
+				//GET UPSTREAM GOODPUT
 				long overallUpstream=0;
 				while (overallUpstream<numBytes)
                 {
-					outToServer.writeBytes(seqToServer);
-                	overallUpstream+=seqToServer.length();
+					outToServer.writeBytes(SEQ_TO_SERVER);
+                	overallUpstream+=SEQ_TO_SERVER.length();
                 }
-				Log.i(TAG, "Upstream test finished. " + overallUpstream+" bytes sent");
-				//Wait for server report
 				int upstreamGoodputInt = Integer.parseInt(inFromServer.readLine());
 				notifyActivity(upstreamGoodputInt, GOODPUT_UPSTREAM_ID);
+				
+				if (DEBUG) Log.i(TAG, "Upstream test finished. " + overallUpstream+" bytes sent");				
 			}
 			
 			clientSocket.close();
 		}
 		catch(Exception e){
 			Log.i(TAG, "EXCEPTION OPENING CONNECTION: "+e.getMessage());
-		}
-		  
+		}		  
 
-	}*/
+	}
+	*/
 	
-	
-	
-	
-
 }
