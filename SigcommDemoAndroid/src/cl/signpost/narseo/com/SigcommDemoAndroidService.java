@@ -149,7 +149,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	 * Test thread (periodically sends a new value)
 	 * (non-Javadoc)
 	 * @see java.lang.Runnable#run()
-	 */
+	 *//*
 	public void run(){
 		int counter = 0;
 		while (testAlive){
@@ -166,11 +166,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				Log.i(TAG, "ERROR: "+e.getMessage());
 			}
 		}
-	}
+	}*/
 	
 	
 	//Thread!
-	/*
 	public void run (){
 		try{
 			//Connects to server
@@ -246,6 +245,6 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		}		  
 
 	}
-	*/
+	
 	
 }
