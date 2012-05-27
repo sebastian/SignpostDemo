@@ -1,0 +1,30 @@
+
+[
+
+{"name":"mac.andrius.signpo.st", "owned":"andrius.signpo.st", "connects":["phone.andrius.signpo.st", "home.andrius.signpo.st", "laptop.seb.signpo.st", "filestore.seb.signpo.st"]},
+{"name":"phone.andrius.signpo.st", "owned":"andrius.signpo.st", "connects":["mac.andrius.signpo.st"]},
+{"name":"home.andrius.signpo.st", "owned":"andrius.signpo.st", "connects":["mac.andrius.signpo.st"]},
+
+{"name":"phone.seb.signpo.st", "owned":"seb.signpo.st", "connects":["imac.seb.signpo.st", "filestore.seb.signpo.st", "mac.andrius.signpo.st"]},
+{"name":"ipad.seb.signpo.st", "owned":"seb.signpo.st", "connects":["filestore.seb.signpo.st"]},
+{"name":"imac.seb.signpo.st", "owned":"seb.signpo.st", "connects":[]},
+{"name":"laptop.seb.signpo.st", "owned":"seb.signpo.st", "connects":[]},
+{"name":"filestore.seb.signpo.st", "owned":"seb.signpo.st", "connects":[]},
+
+
+{"name":"filestore.anil.signpo.st", "owned":"anil.signpo.st", "connects":["home1.anil.signpo.st", "home2.anil.signpo.st"]},
+{"name":"phone.anil.signpo.st", "owned":"anil.signpo.st", "connects":["filestore.anil.signpo.st", "mac.anil.signpo.st", "lab.anil.signpo.st"]},
+{"name":"mac.anil.signpo.st", "owned":"anil.signpo.st", "connects":["filestore.anil.signpo.st", "mac.andrius.signpo.st", "laptop.seb.signpo.st", "lab.haris.signpo.st", "eee.haris.signpo.st"]},
+{"name":"home1.anil.signpo.st", "owned":"anil.signpo.st", "connects":["filestore.anil.signpo.st"]},
+{"name":"home3.anil.signpo.st", "owned":"anil.signpo.st", "connects":["filestore.anil.signpo.st"]},
+{"name":"lab.anil.signpo.st", "owned":"anil.signpo.st", "connects":["home1.anil.signpo.st", "mac.andrius.signpo.st", "lab.haris.signpo.st", "imac.seb.signpo.st"]},
+
+{"name":"tablet.haris.signpo.st", "owned":"haris.signpo.st", "connects":["lab.haris.signpo.st", "home.haris.signpo.st"]},
+{"name":"lab.haris.signpo.st", "owned":"haris.signpo.st", "connects":["lab.anil.signpo.st"]},
+{"name":"home.haris.signpo.st", "owned":"haris.signpo.st", "connects":[]},
+{"name":"eee.haris.signpo.st", "owned":"haris.signpo.st", "connects":["thinkpad.haris.signpo.st", "lab.anil.signpo.st"]},
+{"name":"thinkpad.haris.signpo.st", "owned":"haris.signpo.st", "connects":["tablet.haris.signpo.st", "lab.haris.signpo.st", "home.haris.signpo.st", "eee.haris.signpo.st", "mac.andrius.signpo.st", "laptop.seb.signpo.st", "filestore.seb.signpo.st", "lab.anil.signpo.st", "home1.anil.signpo.st"]},
+{"name":"phone.haris.signpo.st", "owned":"haris.signpo.st", "connects":["thinkpad.haris.signpo.st"]}
+
+
+]
