@@ -9,8 +9,9 @@ let d = String.create num_bytes
 let jitter_sender ~clientsocket ~client_id ~udp_port =
   let open Unix in
   let open Printf in
-  let send_loop dst =
+  let send_loop ip port =
     let hostname = "server" in
+    let dst = Udp_server.addr_from ip port in
     while_lwt true do
       lwt _ = Lwt_unix.sleep (0.02) in
       let hostname = "server" in
@@ -26,9 +27,10 @@ let jitter_sender ~clientsocket ~client_id ~udp_port =
   | ADDR_UNIX sn ->
       printf "Connected with unix socket %S\n%!" sn;
       return ()
-  | inet_addr ->
-      Printf.printf "Client %S, UDP port: %i\n%!" client_id udp_port;
-      send_loop inet_addr
+  | ADDR_INET(inet_addr, port) ->
+      let ip = Unix.string_of_inet_addr inet_addr in
+      Printf.printf "Client %S, IP: %S UDP port: %i\n%!" client_id ip udp_port;
+      send_loop ip port
 
 let udp_handler ~content = 
   let open Re_str in
@@ -37,12 +39,14 @@ let udp_handler ~content =
   | [hostname; timestamp; jitterFloat] ->
       let current_time = Unix.gettimeofday () in
       let timestamp_float = float_of_string timestamp in
-      let jitter_diff_ms = (current_time -. timestamp_float) *. 1000. in
+      let jitter_diff_ms = (current_time -. timestamp_float) in
       Store.add_jitter_measurement hostname jitter_diff_ms;
-      Printf.printf "[%S] (%S) sees jitter: %S\n%!" 
+      let jitter_seen_locally = Store.get_jitter hostname in
+      Printf.printf "[%S] (%S) sees jitter: %S, we see jitter: %f\n%!" 
           hostname 
           timestamp
-          jitterFloat;
+          jitterFloat
+          jitter_seen_locally;
       return ()
   | _ ->
       Printf.printf "Malformed UDP jitter packet.\n%!";

@@ -79,6 +79,7 @@ let jitter jitter_list =
 
 let update_jitter client_id data =
   let new_jitter = jitter data.jitter_measurements in
+  Printf.printf "Calculating jitter for %S to be %f\n%!" client_id new_jitter;
   set_jitter client_id new_jitter
 
 let thread () =

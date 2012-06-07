@@ -32,3 +32,6 @@ let thread ~address ~port callback =
 
 let send_datagram text dst =
   Lwt_unix.sendto fd text 0 (String.length text) [] dst
+
+let addr_from ip port = 
+  Unix.(ADDR_INET (inet_addr_of_string ip, port))
