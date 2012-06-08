@@ -2,8 +2,8 @@ open Lwt
 open Re_str
 
 let bytes_per_megabit = 131072.0
-let num_bytes = 10000000
-let udp_listening_port = "7778"
+let num_bytes = 1000000
+let udp_listening_port = "57654"
 let d = String.create num_bytes
 
 let jitter_sender ~clientsocket ~client_id ~udp_port =
@@ -14,23 +14,21 @@ let jitter_sender ~clientsocket ~client_id ~udp_port =
     let dst = Udp_server.addr_from ip port in
     while_lwt true do
       lwt _ = Lwt_unix.sleep (0.02) in
-      let hostname = "server" in
       let timestamp = Unix.gettimeofday () in
       let jitter = Store.get_jitter client_id in
       let payload = sprintf "%S\r\n%f\r\n%f\r\n" hostname timestamp jitter in
-      printf "%S\n%!" payload;
       Udp_server.send_datagram payload dst;
       return ()
     done
   in
   match clientsocket with
   | ADDR_UNIX sn ->
-      printf "Connected with unix socket %S\n%!" sn;
+      printf "Connected with unix socket %S. We don't support that.\n%!" sn;
       return ()
-  | ADDR_INET(inet_addr, port) ->
+  | ADDR_INET(inet_addr, _port) ->
       let ip = Unix.string_of_inet_addr inet_addr in
-      Printf.printf "Client %S, IP: %S UDP port: %i\n%!" client_id ip udp_port;
-      send_loop ip port
+      printf "Client %S, IP: %S UDP port: %i\n%!" client_id ip udp_port;
+      send_loop ip udp_port
 
 let udp_handler ~content = 
   let open Re_str in
@@ -42,18 +40,12 @@ let udp_handler ~content =
       let jitter_diff_ms = (current_time -. timestamp_float) in
       Store.add_jitter_measurement hostname jitter_diff_ms;
       let jitter_seen_locally = Store.get_jitter hostname in
-      Printf.printf "[%S] (%S) sees jitter: %S, we see jitter: %f\n%!" 
-          hostname 
-          timestamp
-          jitterFloat
-          jitter_seen_locally;
       return ()
   | _ ->
       Printf.printf "Malformed UDP jitter packet.\n%!";
       return ()
 
 let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
-  let open Printf in
   let wl s = Lwt_io.write oc (s ^ "\r\n") in
   let rl () = Lwt_io.read_line ic in
 
@@ -64,7 +56,7 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
   lwt () = wl udp_listening_port in
   jitter_sender ~clientsocket:clisockaddr ~client_id:id ~udp_port:port_int;
 
-  printf "%S connected.\n%!" id;
+  Printf.printf "%S connected.\n%!" id;
 
   (* Allow to perform measurements repeatedly *)
   while_lwt true do
@@ -84,7 +76,6 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
     let t2 = Unix.gettimeofday () in
     let clat_ms = (float_of_string clat_microseconds_str) /. 1000.0 in 
     let slat_ms = (t2 -. t1) *. 1000. /. 2. in
-    Printf.printf "clat: %f, slat: %f --- " clat_ms slat_ms;
 
     (* Write data to client for downstream goodput measurement *)
     lwt () = Lwt_io.write oc d in
@@ -112,8 +103,6 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
     let numPerSecond = (1000. /. transmission_time_ms) in
     let bytesPerSecond = numPerSecond *. (float_of_int num_bytes) in
     let upstream_mbitPerSecond = bytesPerSecond /. bytes_per_megabit in
-    Printf.printf "Downstream: %f, upstream: %f\n%!" downstream_bandwidth_in_mb
-        upstream_mbitPerSecond;
     Store.set_upstream_bandwidth id upstream_mbitPerSecond;
 
     (* Report upstream goodput to client *)
@@ -123,6 +112,7 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
   done
 
 let main () =
+  Lwt_engine.set (new Lwt_engine.select);
   let open Unix in
   Store.thread ();
   Udp_server.thread ~address:"0.0.0.0" ~port:(int_of_string udp_listening_port) udp_handler;
@@ -130,6 +120,5 @@ let main () =
       ~sockaddr:(ADDR_INET (inet_addr_any, 7777)) 
       ~timeout:None
       tcp_handler
-
 
 let _ = Lwt_unix.run (main ())

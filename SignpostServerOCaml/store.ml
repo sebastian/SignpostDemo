@@ -78,15 +78,13 @@ let jitter jitter_list =
   sumOfSquaredDifferences /. length
 
 let update_jitter client_id data =
-  let new_jitter = jitter data.jitter_measurements in
-  Printf.printf "Calculating jitter for %S to be %f\n%!" client_id new_jitter;
+  let new_jitter = (jitter data.jitter_measurements *. 1000.) in
   set_jitter client_id new_jitter
 
 let thread () =
   while_lwt true do
     (* Calculate the jitters every 200ms *)
     lwt _ = Lwt_unix.sleep (0.2) in
-    Printf.printf "Calculating jitter\n%!";
     Hashtbl.iter update_jitter db.clients;
     return ()
   done

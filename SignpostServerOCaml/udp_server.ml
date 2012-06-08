@@ -1,7 +1,8 @@
 open Lwt
 open Printf
 
-let fd = Lwt_unix.(socket PF_INET SOCK_DGRAM 0)
+let fd_send = Lwt_unix.(socket PF_INET SOCK_DGRAM 0)
+let fd_receive = Lwt_unix.(socket PF_INET SOCK_DGRAM 0)
 
 (* Listens on port Config.signal_port *)
 let bind_fd ~address ~port =
@@ -11,8 +12,8 @@ let bind_fd ~address ~port =
   with _ ->
     raise_lwt (Failure ("cannot resolve " ^ address))
   in
-  let () = Lwt_unix.bind fd src in
-  return fd
+  let () = Lwt_unix.bind fd_receive src in
+  return fd_receive
 
 let sockaddr_to_string =
   function
@@ -31,7 +32,7 @@ let thread ~address ~port callback =
   done
 
 let send_datagram text dst =
-  Lwt_unix.sendto fd text 0 (String.length text) [] dst
+  Lwt_unix.sendto fd_send text 0 (String.length text) [] dst
 
 let addr_from ip port = 
   Unix.(ADDR_INET (inet_addr_of_string ip, port))
