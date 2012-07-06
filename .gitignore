@@ -1,1 +1,12 @@
 SignpostServerOCaml/_build/*
+SignpostEngine/*.swp
+SignpostEngine/_build/
+SignpostEngine/setup.data
+SignpostEngine/setup.log
+SignpostEngine/setup.bin
+SignpostEngine/*.docdir
+SignpostEngine/*.native
+SignpostEngine/*.byte
+SignpostEngine/scripts/PASSWD
+SignpostEngine/**.bak
+SignpostEngine/**.DS_Store
