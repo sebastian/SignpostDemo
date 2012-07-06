@@ -1,0 +1,3 @@
+[submodule "SignpostEngine"]
+	path = SignpostEngine
+	url = https://github.com/crotsos/signpostd.git
