@@ -389,7 +389,7 @@ function drawStats(source, targets){
               .data([bandwidth[targets[node].key], latency[targets[node].key], jitter[targets[node].key]])
               .enter().append("div")
               .attr("class", "horizon")
-              .call(context.horizon().extent([0, 700]));
+              .call(context.horizon());
 
             div.append("div")
               .attr("class", "rule")

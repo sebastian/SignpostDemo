@@ -1,6 +1,6 @@
 body {
   font-family: "Helvetica Neue", Helvetica, sans-serif;
-  margin: 80px 160px 80px 160px;
+  margin: 20px 40px 20px 60px;
   overflow: hidden;
   position: relative;
 }
@@ -143,6 +143,10 @@ path.arc {
   stroke: #2ca02c;
 }
 
-
+#title {
+  position: absolute;
+  top: 30px;
+  right: 90px;
+}
 
 
