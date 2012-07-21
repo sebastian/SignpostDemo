@@ -1,0 +1,9 @@
+[
+{"client":"client1", "server":"home", 
+  "type":"openvpn", "timestamp":"341515", 
+  "bandwidth":"nan", "latency":"nan", "jitter":"nan"},
+
+{"client":"", "server":"", 
+  "type":"", "timestamp":"", 
+  "bandwidth":"", "latency":"", "jitter":""},
+]
