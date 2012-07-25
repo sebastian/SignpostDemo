@@ -35,8 +35,14 @@ let udp_handler ~content =
   let rgxp = regexp "\r\n" in
   match (split rgxp content) with
   | [hostname; timestamp; jitterFloat] ->
+      (* Narseo: I think we need a sequence number in the payload as the jitter
+       * is measured per packet and some of them might be out of order *)
       let current_time = Unix.gettimeofday () in
       let timestamp_float = float_of_string timestamp in
+      (* Narseo: I don't understand why jitter is measured this way. It should
+       * be the difference in the inter-arrival of the packets. Can't see
+       * clearly why this is mixing the local clock and the clock of the remote
+       * client as this is being taken from the payload (?) I might be wrong *)
       let jitter_diff_ms = (current_time -. timestamp_float) in
       Store.add_jitter_measurement hostname jitter_diff_ms;
       let jitter_seen_locally = Store.get_jitter hostname in
