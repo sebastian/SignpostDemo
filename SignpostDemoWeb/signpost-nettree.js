@@ -13,32 +13,46 @@ var tree = d3.layout.tree()
 var diagonal = d3.svg.diagonal()
     .projection(function(d) { return [d.y, d.x]; });
 
-var vis = d3.select("#chart").append("svg:svg")
+/**
+ * Prepare document's DOM for SVG drawing
+ */ 
+// Chrome 15 bug: <http://code.google.com/p/chromium/issues/detail?id=98951>
+var div = d3.select("body").insert("div", "h2").insert("div").attr("id", "chart");
+
+var vis = div.append("svg:svg")
     .attr("width", w+100)
     .attr("height", h)
   .append("svg:g");
 
 d3.json("signpost-sigcomm-setup.json", function(json) {
-  update(root = json);
+  updateStructure(root = json);
 });
 
-// Cubism context
-// TODO: adjust delays, steps and size to appropriate values
+d3.json("signpost-sigcomm-connections.json", function(json) {
+  updateTunnels(json);
+});
 
-var divTime = d3.select("#chart").append("div")
+
+// Time-series of node connection statistics
+
+var divTime = div.append("div")
     .style("top", "0px")
     .style("left", (w+120) + "px")
-    .style("width", w/2 + "px")
+    .style("width", w + "px")
     .style("height", h + "px")
     .style("position", "absolute");
 
 
 var timeSeries = divTime.append("div")
-  .attr("id", "time-series");
+  .attr("id", "time-series")
+  .style("width", w+"px")
+  .style("height", h+"px");
 
+// Cubism context
+// TODO: adjust delays, steps and size to appropriate values
 var context = cubism.context()
   .serverDelay(30 * 1000)   // Allow 30 seconds collection delay
-  .step(15 * 1000)                // 15 seconds per value
+  .step(1 * 1000)                // 15 seconds per value
   .size(300);
 
 
@@ -46,10 +60,12 @@ var bandwidth = [],
     latency = [],
     jitter = [];
 
-function update(source) {
+var nodes = null;
+
+function updateStructure(source) {
 
   // Compute the new tree layout.
-  var nodes = tree.nodes(root).reverse();
+  nodes = tree.nodes(root).reverse();
   console.log(nodes)
   // Update the nodes…
   var node = vis.selectAll("g.node")
@@ -74,7 +90,7 @@ function update(source) {
     .attr("x", function(d) { return d._children ? -8 : 8; })
 		.attr("y", 3)
     .attr("fill", function(d) { return (d.type == "network") ? "#ccc" : "#000"; })
-    //.attr("transform", function(d) { return "translate(" + -10 + "," + -10 + ")"; })
+    .attr("transform", function(d) { return "translate(" + -6 + "," + -8 + ")"; })
     .text(function(d) { return d.name; });
 
   // Transition nodes to their new position.
@@ -161,11 +177,7 @@ function update(source) {
     d.y0 = d.y;
   });
 
-  //TODO: 'nodes' contains position coodinates - collect the actual tunnel
-  //data and draw links betweent the different positions
-  //nodes[i].x, nodes[i].y, nodes[i].name
-
-
+  
   
   // TODO: no random!
   function random(name, mult) {
@@ -230,7 +242,7 @@ function update(source) {
           div.attr("style", "position: absolute; top: "+(node.x-minDX/3-30)+"px;")
           div.append("div")
             .attr("class", "axis")
-            .call(context.axis().orient("top").tickSize(6).ticks(d3.time.minutes, 15));
+            .call(context.axis().orient("top")/*.tickSize(6).ticks(d3.time.minutes, 15)*/);
         }
 
         div.selectAll(".horizon")
@@ -248,6 +260,38 @@ function update(source) {
       });
     });
 
+
+}
+
+function updateTunnels(tunnels){
+  //TODO: 'nodes' contains position coodinates - collect the actual tunnel
+  //data and draw links betweent the different positions
+  //nodes[i].x, nodes[i].y, nodes[i].name
+
+  var line = d3.svg.line()
+    .x(function(d) { return d.x; })
+    .y(function(d) { return d.y; })
+    .interpolate("cardinal").tension(0.2);
+
+  vis.selectAll("tunnel")
+    .data(tunnels.map(function(d){
+      console.log(d);
+      start = nodes.filter(function(nd){ return nd.name == d.client; })[0];
+      end = nodes.filter(function(nd){ return nd.name == d.server; })[0];
+      tunnelLine = [
+                    {y: start.x, x: start.y}, 
+                    {y: (start.x+end.x)/2, x: (start.y+start.y)/2+70}, 
+                    {y: end.x, x: end.y}
+      ];
+      console.log(tunnelLine);
+
+      return {line:tunnelLine, type:d.type};
+    }
+    ))
+    .enter()
+    .append("svg:path")
+    .attr("class", function(d){ return "tunnel-"+d.type;} )
+    .attr("d", function(d){ return line(d.line);} );
 
 }
 

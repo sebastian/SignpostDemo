@@ -3,7 +3,12 @@
   "type":"openvpn", "timestamp":"341515", 
   "bandwidth":"nan", "latency":"nan", "jitter":"nan"},
 
-{"client":"", "server":"", 
-  "type":"", "timestamp":"", 
-  "bandwidth":"", "latency":"", "jitter":""},
+{"client":"client3", "server":"home", 
+  "type":"openvpn", "timestamp":"341515", 
+  "bandwidth":"nan", "latency":"nan", "jitter":"nan"},
+
+{"client":"client4", "server":"home", 
+  "type":"iodine", "timestamp":"341515", 
+  "bandwidth":"nan", "latency":"nan", "jitter":"nan"}
+
 ]

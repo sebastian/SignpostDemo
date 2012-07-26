@@ -147,6 +147,17 @@ path.arc {
   position: absolute;
   top: 30px;
   right: 90px;
+  height: 50px;
 }
 
+path.tunnel-openvpn {
+  stroke: #ff0000;
+  stroke-width: 2px;
+  fill: none;
+}
 
+path.tunnel-iodine{
+  stroke: #00ff00;
+  stroke-width: 2px;
+  fill: none;
+}

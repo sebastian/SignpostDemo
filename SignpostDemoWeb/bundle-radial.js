@@ -332,7 +332,7 @@ function nodemouseclick(d) {
     nodemouseover(d);
     
     drawStats(d, zoomedNodes);
-  }
+  ne\(}
   else{
     console.log("zooming out!");
     zoomedNode = null;
