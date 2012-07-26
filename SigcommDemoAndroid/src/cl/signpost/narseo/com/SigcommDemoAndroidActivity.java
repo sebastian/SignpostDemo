@@ -66,7 +66,8 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 
 
 	public static final int TCP_PORT = 7777;
-	public static final int [] IP_ADDR = {192, 168, 15, 215};
+	public static final int [] IP_ADDR = {192, 168, 1, 94};
+	//public static final int [] IP_ADDR = {192, 168, 0, 10};
 	
 	private static final int MAX_HISTORIC_VALS = 40;
 	private static float [] arrayDownstreamBandwidth = new float[MAX_HISTORIC_VALS];
@@ -81,9 +82,9 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	private static float minTimestampBandwidth = 0.0f;
 	
 	//Parameters about the configuration of the plots, ticks, axis, etc
-    private static String [] yTicksLabelsBandwidth = new String []{"0", "5", "10", "15", "20"};
+    private static String [] yTicksLabelsBandwidth = new String []{"0", "10", "20", "30", "40"};
     private static float [] yTicksPosBandwidth = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
-    private static String [] yTicksLabelsLatency = new String []{"0", "0.25", "0.5", "0.75", "1"};
+    private static String [] yTicksLabelsLatency = new String []{"0", "0.12", "0.25", "0.37", "0.5"};
     private static String [] yTicksLabelsJitter = new String []{"0", "2", "4", "6", "8", "10"};
     private static float [] yTicksPosJitter = new float []{0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f};
     //Default values
@@ -244,7 +245,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
             	}
             	int goodputUpstreamVal = intent.getIntExtra(REFRESH_GOODPUTUPSTREAM_INTENT, -1);
             	if (goodputUpstreamVal>-1){
-                	Log.i(TAG, "Received Goodput Downstream: "+goodputUpstreamVal);
+                	Log.i(TAG, "Received Goodput Upstream: "+goodputUpstreamVal);
                 	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
                 	updateTimestampArray(timestampUpstreamBandwidth,elapsedTime);                	
                 	arrayUpstreamBandwidth = updateHistoricValFloat(arrayUpstreamBandwidth, (float)goodputUpstreamVal/1000.0f); 

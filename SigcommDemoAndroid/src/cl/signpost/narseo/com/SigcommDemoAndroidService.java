@@ -69,6 +69,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	 * Stops connection thread
 	 */
 	public static void stopThread(){
+		Log.i(TAG, "Attempting to stop the thread");
 		testAlive = false;
 	}
 	
@@ -95,10 +96,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public void onDestroy () {
 		Log.e(TAG, "OnDestroy()");
 		super.onDestroy();
-		wl.release();
-		pm = null;
 	}
 
+
+	
 	@Override
 	public void onCreate(){
 		super.onCreate();
@@ -204,6 +205,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				
 				Log.i(TAG, "Packet Length (string): "+in+" - Packet Length (int): "+numBytes);
 				long startDownloadTime = System.currentTimeMillis();                
+				//Timer starts now but this value is 
+				//substracted later latency/2 
+				//(not sure why it is done like that in the server)
 				outToServer.writeBytes(latency+"\r\n");
 				outToServer.flush();
 				
@@ -216,9 +220,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
                 	overall += inFromServer.read(data, 0, 1024);                	
                 }
                 int downloadTime = (int)(System.currentTimeMillis() - startDownloadTime)-latency/1000*2;
-                int goodputDownstream = 8*numBytes/downloadTime;
+                int goodputDownstream = 8*numBytes/downloadTime; //in kbps
+                Log.e(TAG, "DOWNSTREAM (kbps): "+goodputDownstream);
                 notifyActivity(goodputDownstream, GOODPUT_DOWNSTREAM_ID);
-				outToServer.writeBytes(numBytes/downloadTime+ "\r\n");
+				outToServer.writeBytes(goodputDownstream*1000+ "\r\n"); //Sent to server as bps
 				
 				//Wait for server latency
 				int serverLatencyInt = Integer.parseInt(inFromServer.readLine());
@@ -232,7 +237,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 					outToServer.writeBytes(SEQ_TO_SERVER);
                 	overallUpstream+=SEQ_TO_SERVER.length();
                 }
-				int upstreamGoodputInt = Integer.parseInt(inFromServer.readLine());
+				int upstreamGoodputInt = Integer.parseInt(inFromServer.readLine())/1000;
 				notifyActivity(upstreamGoodputInt, GOODPUT_UPSTREAM_ID);
 				
 				if (DEBUG) Log.i(TAG, "Upstream test finished. " + overallUpstream+" bytes sent");				
@@ -242,7 +247,16 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		}
 		catch(Exception e){
 			Log.i(TAG, "EXCEPTION OPENING CONNECTION: "+e.getMessage());
-		}		  
+		}
+
+		 Log.i(TAG, "FINISHED!");
+		 try {
+			wl.release();
+			this.finalize();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 	
