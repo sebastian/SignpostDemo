@@ -1,11 +1,8 @@
-var w = 800,
-    h = 600,
+var w = 720,
+    h = 900,
     i = 0,
     duration = 500,
     root;
-
-getSize();
-w = w/2;
 
 var tree = d3.layout.tree()
     .size([h, w]);
@@ -35,30 +32,22 @@ d3.json("signpost-sigcomm-connections.json", function(json) {
 
 // Time-series of node connection statistics
 
-var divTime = div.append("div")
-    .style("top", "0px")
-    .style("left", (w+120) + "px")
-    .style("width", w + "px")
-    .style("height", h + "px")
-    .style("position", "absolute");
-
-
-var timeSeries = divTime.append("div")
+var timeSeries = div.append("div")
   .attr("id", "time-series")
+  .style("top", "0px")
+  .style("left", (w+120) + "px")
   .style("width", w+"px")
-  .style("height", h+"px");
+  .style("height", h+"px")
+  .style("position", "absolute");
 
 // Cubism context
 // TODO: adjust delays, steps and size to appropriate values
 var context = cubism.context()
-  .serverDelay(30 * 1000)   // Allow 30 seconds collection delay
-  .step(1 * 1000)                // 15 seconds per value
-  .size(300);
+  .serverDelay(1 * 1000)   // Allow 30 seconds collection delay
+  .step(1e4)                // 15 seconds per value
+  .size(500);
 
-
-var bandwidth = [],
-    latency = [],
-    jitter = [];
+var cube = context.cube("http://ec2-107-20-107-204.compute-1.amazonaws.com:1081");
 
 var nodes = null;
 
@@ -198,13 +187,7 @@ function updateStructure(source) {
   }
   
 
-  nodeEnter.each(function(d) {
-      bandwidth[d.name] = random("bandwidth", 100);
-      latency[d.name] = random("latency", 10);
-      jitter[d.name] = random("jitter", 100);
-    });
-
-  //TODO: connection stats for each node (can draw all together, as only
+  //connection stats for each node (can draw all together, as only
   //one possible node on the other side in the current setup)
 
 
@@ -236,22 +219,23 @@ function updateStructure(source) {
     .each(function(node) {
       timeSeries.append("div")
       .attr("id", "time-series-"+ node.name)
-      .attr("style", "position: absolute; top: "+(node.x-minDX/3)+"px;")
       .call(function(div) {
-        if (node.name == topClient.name){
           div.attr("style", "position: absolute; top: "+(node.x-minDX/3-30)+"px;")
           div.append("div")
             .attr("class", "axis")
             .call(context.axis().orient("top")/*.tickSize(6).ticks(d3.time.minutes, 15)*/);
-        }
+
+        var metrics = ["bandwidth", "latency", "jitter"];
 
         div.selectAll(".horizon")
-          .data(function(d) {
-            return [bandwidth[node.name], latency[node.name], jitter[node.name]];
-          })
+          .data(metrics)
           .enter().append("div")
             .attr("class", "horizon")
-            .call(context.horizon().height(minDX/4));
+            .call(context.horizon()
+                .height(20)        // Breaks the graph!
+                .title(function(d) { return d; })
+                .metric(function(d) { return cube.metric("median(stats("+d+").eq(node,'"+node.name+"'))"); })
+            );
 
 
         div.append("div")
