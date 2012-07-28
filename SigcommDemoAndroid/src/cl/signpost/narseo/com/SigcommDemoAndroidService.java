@@ -3,9 +3,12 @@ package cl.signpost.narseo.com;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Random;
 
 import cl.signpost.narseo.com.TestsSignpost.Messages;
@@ -53,6 +56,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public static int UDP_LOCAL_PORT = 5522;
 	
 
+	static SenderThread sender  = null;
+	static ReceiverThread receiver = null;
 	
 	/*
 	 * Configures parameters and links to main activity
@@ -71,6 +76,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public static void stopThread(){
 		Log.i(TAG, "Attempting to stop the thread");
 		testAlive = false;
+		
 	}
 	
 
@@ -170,7 +176,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	}*/
 	
 	
-	//Thread!
+	//Thread! 
+	//If it has to be improved, would be nice to use some event-based libraries
 	public void run (){
 		try{
 			//Connects to server
@@ -179,17 +186,23 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
 			InetAddress addr = InetAddress.getByAddress(ipAddr);
 		    InetSocketAddress isockAddress = new InetSocketAddress(addr, TCP_PORT);
-		    clientSocket.connect(isockAddress);			
+		    clientSocket.connect(isockAddress);	
+		    //Handshake is blocking!
 			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-			String in = null;
 			if (DEBUG) Log.i(TAG, "Connection succeeded");
-			
-			
 			//3-way handshake. Exchange device type, get udp port
 			outToServer.writeBytes( android.os.Build.DEVICE+":"+android.os.Build.MODEL+ " ("+ android.os.Build.PRODUCT + ")"+"\r\n"+UDP_LOCAL_PORT+"\r\n");
-			UDP_SERVER_PORT = Integer.parseInt(inFromServer.readLine());			
+			String in = inFromServer.readLine();
+			UDP_SERVER_PORT = Integer.parseInt(in);			
 			if (DEBUG) Log.i(TAG, "Server line (string): "+in+" - Server UDP port (int): "+UDP_SERVER_PORT);
+			
+			//Starting UDP receiver and sender thread (non-blocking)
+		    SenderThread sender = new SenderThread(addr, UDP_SERVER_PORT);
+		    sender.start();
+		    Thread receiver = new ReceiverThread(sender.getSocket());
+		    receiver.start();
+		    
 			
 			while (testAlive){
 				//Ping message
@@ -199,7 +212,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				
 				
 				//Listen for num bytes from server and estimate latency.
-				int numBytes = Integer.parseInt(inFromServer.readLine());				
+				in = inFromServer.readLine();
+				int numBytes = Integer.parseInt(in);				
 				int latency = (int)(System.currentTimeMillis()-startTime)*1000/2;							
 				notifyActivity(latency, LATENCY_UPSTREAM_ID);
 				
@@ -248,9 +262,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		catch(Exception e){
 			Log.i(TAG, "EXCEPTION OPENING CONNECTION: "+e.getMessage());
 		}
-
-		 Log.i(TAG, "FINISHED!");
-		 try {
+		stopThread();
+		Log.i(TAG, "FINISHED!");
+		try {
 			wl.release();
 			this.finalize();
 		} catch (Throwable e) {
@@ -260,5 +274,88 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 
 	}
 	
+	
+	class SenderThread extends Thread {
+
+		  private InetAddress server;
+
+		  private DatagramSocket socket;
+
+		  private boolean stopped = false;
+
+		  private int port;
+
+		  public SenderThread(InetAddress address, int port) throws SocketException {
+			  	
+			  	this.server = address;
+		    	this.port = port;
+		    	this.socket = new DatagramSocket();
+		    	this.socket.connect(server, port);
+		    	Log.i(TAG, "UDP Sender sending to "+address.getHostName()+":"+port);
+		  }
+
+		  public void halt() {
+			  	this.stopped = true;
+		  }
+
+		  public DatagramSocket getSocket() {		    
+			  return this.socket;
+		  }
+
+		  public void run() {
+			Log.e(TAG, "Starting UDP Server Thread");
+			  
+		    try {
+		      BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+		      while (testAlive) {
+		        
+		        //Info sent to server (hostname;timestamp;jitter)
+		        String theLine = "me\r\n"+(float)System.currentTimeMillis()+"\r\n"+10.0f+"\r\n";
+		        Log.e(TAG, "Sending UDP: "+theLine);
+		        byte[] data = theLine.getBytes();
+		        DatagramPacket output = new DatagramPacket(data, data.length, server, port);
+		        socket.send(output);
+		        
+		        Thread.sleep(50);
+		      }
+		    }
+		    catch (Exception ex) {
+		      Log.e(TAG, "Exception on UdpSender thread> "+ex.getMessage());
+		    }
+		  }
+		}
+
+		class ReceiverThread extends Thread {
+		  DatagramSocket socket;
+
+		  private boolean stopped = false;
+
+		  public ReceiverThread(DatagramSocket ds) throws SocketException {
+		    Log.i(TAG, "UDP Receiver ready to listen on port "+ds.getLocalPort());
+		    this.socket = ds;
+		  }
+
+		  public void halt() {
+		    this.stopped = true;
+		  }
+
+		  public void run() {
+			Log.i(TAG, "Receiver Thread Running ");
+		    byte[] buffer = new byte[1024];
+		    while (testAlive) {
+
+		      DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
+		      try {
+		        socket.receive(dp);
+		        Log.i(TAG, "udp receiver got smthing");
+		        String s = new String(dp.getData(), 0, dp.getLength());
+		        Log.i(TAG, "UDP Receiver> "+s);
+		        Thread.yield();
+		      } catch (Exception ex) {
+			      Log.e(TAG, "Exception on UdpReceiver thread > "+ex.getMessage());
+		      }
+		    }
+		  }
+		}
 	
 }
