@@ -46,6 +46,7 @@ let udp_handler ~content =
       let jitter_diff_ms = (current_time -. timestamp_float) in
       Store.add_jitter_measurement hostname jitter_diff_ms;
       let jitter_seen_locally = Store.get_jitter hostname in
+      Stats_sender.send_jitter hostname jitter_seen_locally;
       return ()
   | _ ->
       Printf.printf "Malformed UDP jitter packet.\n%!";
@@ -93,7 +94,9 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
     (* Good place to store some values, since there is no
      * timing sensitive work happening at the moment *)
     Store.set_downstream_bandwidth id downstream_bandwidth_in_mb;
+    Stats_sender.send_downstream_bandwidth id downstream_bandwidth_in_mb;
     Store.set_latency id clat_ms slat_ms;
+    (* Stats_sender.send_client_latency id clat; *)
 
     (* Tell the client what latency we see *)
     let slat_microseconds_int = int_of_float (slat_ms *. 1000.0) in
