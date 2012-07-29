@@ -6,6 +6,7 @@ type data = {
   client_latency : float;
   server_latency : float;
   current_jitter : float;
+  initial_timestamp: float;
   jitter_measurements : float list
 }
 type db = {
@@ -25,11 +26,16 @@ let get client_id =
       client_latency = 0.;
       server_latency = 0.;
       current_jitter = 0.;
+      initial_timestamp = 0.;
       jitter_measurements = []
     }
 
 let store client_id record =
   Hashtbl.replace db.clients client_id record
+
+let set_initial_timestamp client_id timestamp =
+  let data = get client_id in
+  store client_id {data with initial_timestamp = timestamp}
 
 let set_upstream_bandwidth client_id bw = 
   let data = get client_id in
@@ -59,6 +65,10 @@ let add_jitter_measurement client_id measurement =
 let get_jitter client_id = 
   let data = get client_id in
   data.current_jitter
+
+let get_initial_timestamp client_id =
+  let data = get client_id in
+  data.initial_timestamp 
 
 let set_jitter client_id jitter = 
   let data = get client_id in

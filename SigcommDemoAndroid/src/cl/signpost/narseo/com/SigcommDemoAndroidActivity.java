@@ -21,6 +21,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import uk.ac.cam.cl.dtg.snowdon.*;
 
@@ -39,7 +40,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	private PowerManager.WakeLock mWakeLock;
 	private static Button startButton = null;
 	private static Button stopButton = null;
-	private static EditText jitter = null;
+	private static TextView errorView = null;
 	private static Intent mServiceIntent;
 	private DataUpdateReceiver dataUpdateReceiver;
 
@@ -49,6 +50,8 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	private GraphView mJitterGraph;
 	
 	public static final String REFRESH_DATA = "SIGNPOST_VALUE";
+	public static final String SHOW_ERROR = "ERROR";
+	public static final String ERROR_INTENT = "ERROR_MESSAGE";
 	public static final String REFRESH_LATENCYUPSTREAM_INTENT = "LATENCYUPSTREAM";
 	public static final String REFRESH_LATENCYDOWNSTREAM_INTENT = "LATENCYDOWNSTREAM";
 	public static final String REFRESH_JITTER_INTENT = "JITTER";
@@ -67,9 +70,10 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 
 	public static final int TCP_PORT = 7777;
 	
-	public static final int [] IP_ADDR = {10, 20, 1, 118};
-	//public static final int [] IP_ADDR = {192, 168, 1, 94};
+	//public static final int [] IP_ADDR = {10, 20, 1, 118};
+	public static final int [] IP_ADDR = {192, 168, 1, 94};
 	//public static final int [] IP_ADDR = {192, 168, 0, 10};
+	//public static final int [] IP_ADDR = {192, 168, 43, 7};
 	
 	private static final int MAX_HISTORIC_VALS = 40;
 	private static float [] arrayDownstreamBandwidth = new float[MAX_HISTORIC_VALS];
@@ -101,6 +105,8 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        
+        errorView = (TextView) findViewById(R.id.editText1);
         startButton =(Button) findViewById(R.id.startTest);        
         startButton.setOnClickListener(this);   
         stopButton =(Button) findViewById(R.id.stopTest);        
@@ -155,7 +161,10 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         //Register receiver to obtain data from service
         if (dataUpdateReceiver == null) dataUpdateReceiver = new DataUpdateReceiver();
         IntentFilter intentFilter = new IntentFilter(REFRESH_DATA);
-        registerReceiver(dataUpdateReceiver, intentFilter);        
+        registerReceiver(dataUpdateReceiver, intentFilter);    
+        IntentFilter intentFilterErrorr = new IntentFilter(SHOW_ERROR);
+        registerReceiver(dataUpdateReceiver, intentFilterErrorr);    
+            
         Log.i(TAG, "Signpost Demo Activity. GUI created and resources allocated");
     }
     
@@ -180,7 +189,8 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    	case R.id.startTest:
 	    		Log.i(TAG, "Start button pressed");
 	    		//Start Background service
-	    		
+            	errorView.setText("");
+            	
 	    		SigcommDemoAndroidService.setMainActivity(this, IP_ADDR, TCP_PORT);
 	    		mServiceIntent = new Intent(this, SigcommDemoAndroidService.class);
 	    		bindService (mServiceIntent, mConnection, Context.BIND_AUTO_CREATE);
@@ -190,7 +200,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    	case R.id.stopTest:
 	    		Log.i(TAG, "Stop button pressed");
 	    		//Stop background service
-	    		Log.i(TAG, "Stop button pressed");
 	    		
 	    		try{
 	    			if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);
@@ -227,6 +236,19 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     private class DataUpdateReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(SHOW_ERROR)) {
+            	Log.i(TAG, "Error received: ");
+            	String message = intent.getStringExtra(ERROR_INTENT); 
+            	errorView.setText("ERROR: "+message);
+            	SigcommDemoAndroidService.stopThread();
+				//DESTROY SERVICE		
+	    		try{
+	            	unbindService(mConnection);        			
+	    		}		
+	    		catch(Exception e){
+	    			Log.i(TAG, "ERROR UNBINDING SERVICE: "+e.getMessage());
+	    		}
+            }
             if (intent.getAction().equals(REFRESH_DATA)) {
             	int valueLatencyUpstream = intent.getIntExtra(REFRESH_LATENCYUPSTREAM_INTENT, -1);
             	if (valueLatencyUpstream>-1){

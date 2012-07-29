@@ -34,7 +34,34 @@ let jitter_sender ~clientsocket ~client_id ~udp_port =
 let udp_handler ~content = 
   let rgxp = regexp "\r\n" in
   match (split rgxp content) with
-  | hostname::timestamp::jitterFloat::_ ->
+(*    | [hostname; seqNumber] -> *)
+    | hostname::seqNumber::_ ->
+      let current_time = Unix.gettimeofday() in
+      let float_seqnumber =  float_of_string seqNumber in
+      Printf.printf "Device: %s \n%!" hostname;
+      Printf.printf "Sequence number: %f \n%!" float_seqnumber; 
+      if float_seqnumber == 0. then (
+        Store.set_initial_timestamp hostname current_time;
+        Printf.printf "Timestamp saved: %f\n%!" current_time;
+        return ()
+      ) else (
+        (* Get elapsed time since initial timestamp *)
+              (*Jitter measured based on seqNumber*)
+        let initialTime = Store.get_initial_timestamp hostname in
+        Printf.printf "Initial time: %f\n%!" initialTime;
+        let elapsedTime = (current_time -. initialTime) in
+        let jitterVal = (float_seqnumber*.0.1 -. elapsedTime) in
+        Printf.printf "Elapsed time %f - SeqNumber/Jitter %f/%f\n%!" elapsedTime float_seqnumber jitterVal; 
+        (*Stats_sender.send_jitter hostname jitter_seen_locally;*)
+        return ())
+    | _ ->
+      Printf.printf "Malformed UDP jitter packet. \n%!";
+      return () 
+
+ (* let open Re_str in
+  let rgxp = regexp "\r\n" in
+  match (split rgxp content) with
+  | [hostname; timestamp; jitterFloat] ->
       (* Narseo: I think we need a sequence number in the payload as the jitter
        * is measured per packet and some of them might be out of order *)
       let current_time = Unix.gettimeofday () in
@@ -47,11 +74,11 @@ let udp_handler ~content =
       let jitter_diff_ms = (current_time -. timestamp_float) in
       Store.add_jitter_measurement hostname jitter_diff_ms;
       let jitter_seen_locally = Store.get_jitter hostname in
-      Stats_sender.send_jitter hostname jitter_seen_locally;
+      (*Stats_sender.send_jitter hostname jitter_seen_locally;*)
       return ()
   | _ ->
       Printf.printf "Malformed UDP jitter packet.\n%!";
-      return ()
+      return () *)
 
 let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
   let wl s = Lwt_io.write oc (s ^ "\r\n") in
@@ -95,7 +122,7 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
     (* Good place to store some values, since there is no
      * timing sensitive work happening at the moment *)
     Store.set_downstream_bandwidth id downstream_bandwidth_in_mb;
-    Stats_sender.send_downstream_bandwidth id downstream_bandwidth_in_mb;
+    (*Stats_sender.send_downstream_bandwidth id downstream_bandwidth_in_mb;*)
     Store.set_latency id clat_ms slat_ms;
     (* Stats_sender.send_client_latency id clat; *)
 
