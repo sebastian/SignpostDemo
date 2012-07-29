@@ -31,7 +31,7 @@ let jitter_sender ~clientsocket ~client_id ~udp_port =
       printf "Client %S, IP: %S UDP port: %i\n%!" client_id ip udp_port;
       send_loop ip udp_port
 
-let udp_handler ~content = 
+let udp_handler ~content ~dst = 
   let rgxp = regexp "\r\n" in
   match (split rgxp content) with
 (*    | [hostname; seqNumber] -> *)
@@ -40,45 +40,29 @@ let udp_handler ~content =
       let float_seqnumber =  float_of_string seqNumber in
       Printf.printf "Device: %s \n%!" hostname;
       Printf.printf "Sequence number: %f \n%!" float_seqnumber; 
-      if float_seqnumber == 0. then (
-        Store.set_initial_timestamp hostname current_time;
-        Printf.printf "Timestamp saved: %f\n%!" current_time;
-        return ()
-      ) else (
-        (* Get elapsed time since initial timestamp *)
+      let reply_msg = 
+        match float_seqnumber with 
+          | 0.0 -> 
+              (Store.set_initial_timestamp hostname current_time;
+              Printf.printf "Timestamp saved: %f\n%!" current_time);
+              "0.0\r\n"
+          | float_seqnumber -> 
+              (* Get elapsed time since initial timestamp *)
               (*Jitter measured based on seqNumber*)
-        let initialTime = Store.get_initial_timestamp hostname in
-        Printf.printf "Initial time: %f\n%!" initialTime;
-        let elapsedTime = (current_time -. initialTime) in
-        let jitterVal = (float_seqnumber*.0.1 -. elapsedTime) in
-        Printf.printf "Elapsed time %f - SeqNumber/Jitter %f/%f\n%!" elapsedTime float_seqnumber jitterVal; 
+              (let initialTime = Store.get_initial_timestamp hostname in
+              let _ = Printf.printf "Initial time: %f\n%!" initialTime in
+              let elapsedTime = (current_time -. initialTime) in
+              let jitterVal = abs_float (float_seqnumber*.0.1 -. elapsedTime) in
+                Printf.printf "Elapsed time %f - SeqNumber/Jitter %f/%f\n%!" 
+                  elapsedTime float_seqnumber jitterVal;
+              sprintf "%.06f\n\r" jitterVal)
+      in
         (*Stats_sender.send_jitter hostname jitter_seen_locally;*)
-        return ())
+        Lwt.ignore_result (Udp_server.send_datagram reply_msg dst);
+        return ()
     | _ ->
       Printf.printf "Malformed UDP jitter packet. \n%!";
       return () 
-
- (* let open Re_str in
-  let rgxp = regexp "\r\n" in
-  match (split rgxp content) with
-  | [hostname; timestamp; jitterFloat] ->
-      (* Narseo: I think we need a sequence number in the payload as the jitter
-       * is measured per packet and some of them might be out of order *)
-      let current_time = Unix.gettimeofday () in
-      let timestamp_float = float_of_string timestamp in
-      (* Narseo: I don't understand why jitter is measured this way. It should
-       * be the difference in the inter-arrival of the packets. Can't see
-       * clearly why this is mixing the local clock and the clock of the remote
-       * client as this is being taken from the payload (?) I might be wrong *)
-        Printf.printf "%f: Received %s %f %s\n%!" current_time hostname timestamp_float timestamp;
-      let jitter_diff_ms = (current_time -. timestamp_float) in
-      Store.add_jitter_measurement hostname jitter_diff_ms;
-      let jitter_seen_locally = Store.get_jitter hostname in
-      (*Stats_sender.send_jitter hostname jitter_seen_locally;*)
-      return ()
-  | _ ->
-      Printf.printf "Malformed UDP jitter packet.\n%!";
-      return () *)
 
 let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
   let wl s = Lwt_io.write oc (s ^ "\r\n") in
