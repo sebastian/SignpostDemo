@@ -49,6 +49,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public static final int GOODPUT_DOWNSTREAM_ID = 3;
 	public static final int JITTER_ID = 4;
 	
+	public static long now = 0;
+	public static long prev = 0;
+	
 	//Data stream transmitted to server
 	public static final String SEQ_TO_SERVER = "abcdefghijklmnop";
 	
@@ -67,7 +70,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	
 
 	static SenderThread sender  = null;
-	static ReceiverThread receiver = null;
+
 	
 
 	  
@@ -219,12 +222,12 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			
 
 
-	    	
+
 			//Starting UDP receiver and sender thread (non-blocking)
 		    SenderThread sender = new SenderThread(addr, UDP_SERVER_PORT);
 		    sender.start();
-		    Thread receiver = new ReceiverThread();
-		    receiver.start();
+		   // Thread receiver = new ReceiverThread();
+		   // receiver.start();
 		    
 			
 			while (testAlive){
@@ -317,45 +320,72 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		  private InetAddress server;
 
 
-		  private DatagramSocket socket = null;
+		 // private DatagramSocket socket = null;
 		  private boolean stopped = false;
 
 		  private int port;
+
+	      byte[] sendData = new byte[100];
+	      byte[] receiveData = new byte[100];
 
 		  public SenderThread(InetAddress address, int port) throws SocketException {
 			  	
 			  	this.server = address;
 		    	this.port = port;
-		    	socket = new DatagramSocket();
-		    	socket.connect(server, port);
+		    	 //socket = new DatagramSocket();
 		    	Log.i(TAG, "UDP Sender sending to "+address.getHostName()+":"+port);
 		  }
 
 		  public void halt() {
 			  	this.stopped = true;
 		  }
-
-		  /*
+/*
+		  
 		  public DatagramSocket getSocket() {		    
 			  return this.socket;
-		  }*/
-
+		  }
+*/
 		  public void run() {
 			Log.e(TAG, "Starting UDP Server Thread");
 			udpSeqNumber = 0;
+		      
 		    try {
-		      BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+				DatagramSocket clientSocket = new DatagramSocket();
+		      //BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+		      
 		      while (testAlive) {
-		        
-		        //Info sent to server (hostname;timestamp;jitter)
-		        String theLine = devName+"\r\n"+udpSeqNumber+"\r\n";
-		        Log.e(TAG, "Sending UDP: "+theLine);
-		        byte[] data = theLine.getBytes();
-		        DatagramPacket output = new DatagramPacket(data, data.length, server, port);
-		        socket.send(output);
-		        udpSeqNumber++;		        
-		        Thread.sleep(100);
+		    	  try{
+		    	  	long enterLoop = System.currentTimeMillis();
+			    	//Info sent to server (hostname;timestamp;jitter) + -1 indicating start RTT test
+			        String theLine = devName+"\r\n"+0+"\r\n";
+			        //Log.e(TAG, "Sending UDP: "+theLine);
+			        byte[] data = theLine.getBytes();
+			        long sendTime = System.currentTimeMillis();
+			        DatagramPacket dpSend = new DatagramPacket(data, data.length, server, port);
+			        clientSocket.send(dpSend);
+			        /*Wait for server response and client estimate RTT*/
+			        DatagramPacket dpReceive = new DatagramPacket(receiveData, receiveData.length);
+			         
+			        clientSocket.receive(dpReceive);
+			        String response = new String(dpReceive.getData(), 0, dpReceive.getLength());
+			        Log.e(TAG, "Server response: "+response);
+			        long localRtt=System.currentTimeMillis()-sendTime;
+			        Log.i(TAG, "UDP RTT: "+localRtt);
+			        /*Send response to server*/
+			        theLine = devName+"\r\n"+localRtt+"\r\n";
+			        data = theLine.getBytes();
+			        dpSend = new DatagramPacket(data, data.length,server, port);			        
+			        clientSocket.send(dpSend);
+
+			        long error = (System.currentTimeMillis()-enterLoop);
+			        Log.i(TAG, "Sleep error "+error);
+			        Thread.sleep(2000-error);
+			    }
+			    catch(Exception e){
+			    	Log.e(TAG, "Test failed: "+e.getMessage());
+			    }
 		      }
+		      clientSocket.close();
 		    }
 		    catch (Exception ex) {
 		      Log.e(TAG, "Exception on UdpSender thread> "+ex.getMessage());
@@ -363,32 +393,6 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		  }
 		}
 
-		class ReceiverThread extends Thread {
-		  DatagramSocket socket;
 
-		  public ReceiverThread(/*DatagramSocket ds*/) throws SocketException {
-		    //Log.i(TAG, "UDP Receiver ready to listen on port "+ds.getLocalPort());
-			  this.socket = new DatagramSocket(5001);
-
-		  }
-
-		  public void run() {
-			Log.i(TAG, "Receiver Thread Running ");
-		    byte[] buffer = new byte[100];
-		    while (testAlive) {
-
-		      DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
-		      try {
-		        socket.receive(dp);
-		        Log.i(TAG, "udp receiver got smthing");
-		        String s = new String(dp.getData(), 0, dp.getLength());
-		        Log.i(TAG, "UDP Receiver> "+s);
-		        //Thread.yield();
-		      } catch (Exception ex) {
-			      Log.e(TAG, "Exception on UdpReceiver thread > "+ex.getMessage());
-		      }
-		    }
-		  }
-		}
 	
 }

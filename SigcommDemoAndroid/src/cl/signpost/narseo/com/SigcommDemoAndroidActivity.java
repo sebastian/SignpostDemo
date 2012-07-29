@@ -241,9 +241,16 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
             	Log.i(TAG, "Error received: ");
             	String message = intent.getStringExtra(ERROR_INTENT); 
             	errorView.setText("ERROR: "+message);
-            	SigcommDemoAndroidService.stopThread();
+            	//stop server
+            	try{
+            		SigcommDemoAndroidService.stopThread();
+            	}
+            	catch(Exception e){
+            		Log.i(TAG, "Error: "+e.getMessage());
+            	}
 				//DESTROY SERVICE		
 	    		try{
+	    			
 	            	unbindService(mConnection);        			
 	    		}		
 	    		catch(Exception e){
