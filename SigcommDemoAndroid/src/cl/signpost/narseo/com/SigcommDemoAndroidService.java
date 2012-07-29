@@ -69,6 +69,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	static SenderThread sender  = null;
 	static ReceiverThread receiver = null;
 	
+
+	  
 	/*
 	 * Configures parameters and links to main activity
 	 */
@@ -215,10 +217,13 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			UDP_SERVER_PORT = Integer.parseInt(in);			
 			if (DEBUG) Log.i(TAG, "Server line (string): "+in+" - Server UDP port (int): "+UDP_SERVER_PORT);
 			
+
+
+	    	
 			//Starting UDP receiver and sender thread (non-blocking)
 		    SenderThread sender = new SenderThread(addr, UDP_SERVER_PORT);
 		    sender.start();
-		    Thread receiver = new ReceiverThread(sender.getSocket());
+		    Thread receiver = new ReceiverThread();
 		    receiver.start();
 		    
 			
@@ -311,8 +316,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 
 		  private InetAddress server;
 
-		  private DatagramSocket socket;
 
+		  private DatagramSocket socket = null;
 		  private boolean stopped = false;
 
 		  private int port;
@@ -321,8 +326,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			  	
 			  	this.server = address;
 		    	this.port = port;
-		    	this.socket = new DatagramSocket();
-		    	this.socket.connect(server, port);
+		    	socket = new DatagramSocket();
+		    	socket.connect(server, port);
 		    	Log.i(TAG, "UDP Sender sending to "+address.getHostName()+":"+port);
 		  }
 
@@ -330,9 +335,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			  	this.stopped = true;
 		  }
 
+		  /*
 		  public DatagramSocket getSocket() {		    
 			  return this.socket;
-		  }
+		  }*/
 
 		  public void run() {
 			Log.e(TAG, "Starting UDP Server Thread");
@@ -360,15 +366,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		class ReceiverThread extends Thread {
 		  DatagramSocket socket;
 
-		  private boolean stopped = false;
+		  public ReceiverThread(/*DatagramSocket ds*/) throws SocketException {
+		    //Log.i(TAG, "UDP Receiver ready to listen on port "+ds.getLocalPort());
+			  this.socket = new DatagramSocket(5001);
 
-		  public ReceiverThread(DatagramSocket ds) throws SocketException {
-		    Log.i(TAG, "UDP Receiver ready to listen on port "+ds.getLocalPort());
-		    this.socket = ds;
-		  }
-
-		  public void halt() {
-		    this.stopped = true;
 		  }
 
 		  public void run() {
