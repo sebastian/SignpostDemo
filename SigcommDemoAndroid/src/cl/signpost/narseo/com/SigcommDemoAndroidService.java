@@ -13,12 +13,14 @@ import java.util.Random;
 
 import cl.signpost.narseo.com.TestsSignpost.Messages;
 
+import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
 
 public class SigcommDemoAndroidService extends Service implements Runnable{
 
@@ -29,8 +31,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	
 	public static final Boolean DEBUG = true;
 	
+	public static float udpSeqNumber = 0.0f;
 
 	public static final String REFRESH_DATA = "SIGNPOST_VALUE";
+	public static final String SHOW_ERROR = "ERROR";
+	public static final String ERROR_INTENT = "ERROR_MESSAGE";
 	public static final String REFRESH_LATENCYUPSTREAM_INTENT = "LATENCYUPSTREAM";
 	public static final String REFRESH_LATENCYDOWNSTREAM_INTENT = "LATENCYDOWNSTREAM";
 	public static final String REFRESH_JITTER_INTENT = "JITTER";
@@ -50,8 +55,13 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	//Used to kill the thread
 	public static boolean testAlive = false;
 
+	//Default DevName
+	public static String devName = "Android";
+	
 	//Default values
-	public static int [] SERVER = {192, 168, 1, 1};
+	//public static int [] SERVER = {192, 168, 1, 1};
+
+	public static int [] SERVER = {10, 20, 1, 118};
 	public static int TCP_PORT = 7777;
 	public static int UDP_LOCAL_PORT = 5522;
 	
@@ -113,6 +123,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "WAKELOCK");
 		wl.acquire();
+		devName = android.os.Build.DEVICE+":"+android.os.Build.MODEL+ " ("+ android.os.Build.PRODUCT + ")";
 		Log.e(TAG, "WakeLock acquired by service");
 		Thread th = new Thread(this);
 		th.start();
@@ -148,6 +159,13 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		}
 
 		i.putExtra(extraVal, value);
+		sendBroadcast(i);
+	}
+	
+	public void notifyErrorActivity (String errorMsg){
+		Log.i(TAG, "Error to be notified "+errorMsg);
+		Intent i = new Intent(this.SHOW_ERROR);
+		i.putExtra(this.ERROR_INTENT, errorMsg);
 		sendBroadcast(i);
 	}
 	
@@ -192,7 +210,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			if (DEBUG) Log.i(TAG, "Connection succeeded");
 			//3-way handshake. Exchange device type, get udp port
-			outToServer.writeBytes( android.os.Build.DEVICE+":"+android.os.Build.MODEL+ " ("+ android.os.Build.PRODUCT + ")"+"\r\n"+UDP_LOCAL_PORT+"\r\n");
+			outToServer.writeBytes(devName+"\r\n"+UDP_LOCAL_PORT+"\r\n");
 			String in = inFromServer.readLine();
 			UDP_SERVER_PORT = Integer.parseInt(in);			
 			if (DEBUG) Log.i(TAG, "Server line (string): "+in+" - Server UDP port (int): "+UDP_SERVER_PORT);
@@ -261,9 +279,23 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		}
 		catch(Exception e){
 			Log.i(TAG, "EXCEPTION OPENING CONNECTION: "+e.getMessage());
+			notifyErrorActivity("SERVER NOT AVAILABLE");
+			
+			/*new AlertDialog.Builder(this).setTitle("Error").setMessage("Server does not respond!").setPositiveButton("OK", null).show();*/  
+			
+			/*
+			Context context = getApplicationContext();
+			CharSequence text = "ERROR. Couldn't open connection with server";
+			int duration = Toast.LENGTH_SHORT;
+
+			Toast toast = Toast.makeText(context, text, duration);
+			toast.show();
+			*/
 		}
 		stopThread();
 		Log.i(TAG, "FINISHED!");
+		
+		
 		try {
 			wl.release();
 			this.finalize();
@@ -304,19 +336,19 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 
 		  public void run() {
 			Log.e(TAG, "Starting UDP Server Thread");
-			  
+			udpSeqNumber = 0;
 		    try {
 		      BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
 		      while (testAlive) {
 		        
 		        //Info sent to server (hostname;timestamp;jitter)
-		        String theLine = "me\r\n"+(float)System.currentTimeMillis()+"\r\n"+10.0f+"\r\n";
+		        String theLine = devName+"\r\n"+udpSeqNumber+"\r\n";
 		        Log.e(TAG, "Sending UDP: "+theLine);
 		        byte[] data = theLine.getBytes();
 		        DatagramPacket output = new DatagramPacket(data, data.length, server, port);
 		        socket.send(output);
-		        
-		        Thread.sleep(50);
+		        udpSeqNumber++;		        
+		        Thread.sleep(100);
 		      }
 		    }
 		    catch (Exception ex) {
