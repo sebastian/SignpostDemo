@@ -27,7 +27,7 @@ let thread ~address ~port callback =
     let buf = String.create 4096 in
     lwt len, dst = Lwt_unix.recvfrom fd buf 0 (String.length buf) [] in
     let subbuf = String.sub buf 0 len in
-    callback ~content:subbuf;
+    callback ~content:subbuf ~dst:dst;
     return ()
   done
 

@@ -1,6 +1,7 @@
 open Lwt
 
-let stats_server_name = "http://ec2-107-20-107-204.compute-1.amazonaws.com"
+(* let stats_server_name = "ec2-107-20-107-204.compute-1.amazonaws.com" *)
+let stats_server_name = "107.20.107.204"
 let stats_server_port = 1080
 
 lwt stats_dst = try_lwt

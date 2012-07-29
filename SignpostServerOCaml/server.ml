@@ -40,12 +40,12 @@ let udp_handler ~content ~dst =
       let float_seqnumber =  float_of_string seqNumber in
       Printf.printf "Device: %s \n%!" hostname;
       Printf.printf "Sequence number: %f \n%!" float_seqnumber; 
-      let reply_msg = 
+      let jitter_seen_locally = 
         match float_seqnumber with 
           | 0.0 -> 
               (Store.set_initial_timestamp hostname current_time;
               Printf.printf "Timestamp saved: %f\n%!" current_time);
-              "0.0\r\n"
+              0.0
           | float_seqnumber -> 
               (* Get elapsed time since initial timestamp *)
               (*Jitter measured based on seqNumber*)
@@ -55,10 +55,10 @@ let udp_handler ~content ~dst =
               let jitterVal = abs_float (float_seqnumber*.0.1 -. elapsedTime) in
                 Printf.printf "Elapsed time %f - SeqNumber/Jitter %f/%f\n%!" 
                   elapsedTime float_seqnumber jitterVal;
-              sprintf "%.06f\n\r" jitterVal)
+                jitterVal)
       in
-        (*Stats_sender.send_jitter hostname jitter_seen_locally;*)
-        Lwt.ignore_result (Udp_server.send_datagram reply_msg dst);
+        Stats_sender.send_jitter hostname jitter_seen_locally;
+        Lwt.ignore_result (Udp_server.send_datagram (sprintf "%f\r\n" jitter_seen_locally) dst);
         return ()
     | _ ->
       Printf.printf "Malformed UDP jitter packet. \n%!";
@@ -73,7 +73,8 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
   lwt port = rl () in
   let port_int = int_of_string port in
   lwt () = wl udp_listening_port in
-  jitter_sender ~clientsocket:clisockaddr ~client_id:id ~udp_port:port_int;
+(*   jitter_sender ~clientsocket:clisockaddr ~client_id:id ~udp_port:port_int;
+ *   *)
 
   Printf.printf "%S connected.\n%!" id;
 
