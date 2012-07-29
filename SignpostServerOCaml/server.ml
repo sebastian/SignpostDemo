@@ -1,5 +1,8 @@
 open Lwt
 open Re_str
+open Unix 
+open Printf 
+open Re_str 
 
 let bytes_per_megabit = 131072.0
 let num_bytes = 1000000
@@ -7,8 +10,6 @@ let udp_listening_port = "57654"
 let d = String.create num_bytes
 
 let jitter_sender ~clientsocket ~client_id ~udp_port =
-  let open Unix in
-  let open Printf in
   let send_loop ip port =
     let hostname = "server" in
     let dst = Udp_server.addr_from ip port in
@@ -31,10 +32,9 @@ let jitter_sender ~clientsocket ~client_id ~udp_port =
       send_loop ip udp_port
 
 let udp_handler ~content = 
-  let open Re_str in
   let rgxp = regexp "\r\n" in
   match (split rgxp content) with
-  | [hostname; timestamp; jitterFloat] ->
+  | hostname::timestamp::jitterFloat::_ ->
       (* Narseo: I think we need a sequence number in the payload as the jitter
        * is measured per packet and some of them might be out of order *)
       let current_time = Unix.gettimeofday () in
@@ -43,6 +43,7 @@ let udp_handler ~content =
        * be the difference in the inter-arrival of the packets. Can't see
        * clearly why this is mixing the local clock and the clock of the remote
        * client as this is being taken from the payload (?) I might be wrong *)
+        Printf.printf "%f: Received %s %f %s\n%!" current_time hostname timestamp_float timestamp;
       let jitter_diff_ms = (current_time -. timestamp_float) in
       Store.add_jitter_measurement hostname jitter_diff_ms;
       let jitter_seen_locally = Store.get_jitter hostname in
@@ -122,7 +123,6 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
 
 let main () =
   Lwt_engine.set (new Lwt_engine.select);
-  let open Unix in
   Store.thread ();
   Udp_server.thread ~address:"0.0.0.0" ~port:(int_of_string udp_listening_port) udp_handler;
   Tcp_server.simple 
