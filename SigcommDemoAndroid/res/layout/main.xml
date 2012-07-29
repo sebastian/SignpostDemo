@@ -66,7 +66,7 @@
             android:layout_height="wrap_content" >
     
 	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
-		android:layout_height="135dp" android:id="@+id/graphLatency" 		
+		android:layout_height="120dp" android:id="@+id/graphLatency" 		
         android:layout_weight="1"/>
 	
 		</TableRow>
@@ -79,7 +79,7 @@
             android:layout_height="wrap_content" >
     
 	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
-		android:layout_height="135dp" android:id="@+id/graphGoodput" 		
+		android:layout_height="120dp" android:id="@+id/graphGoodput" 		
         android:layout_weight="1"/>
 	
 		</TableRow>
@@ -91,8 +91,23 @@
             android:layout_height="wrap_content" >
     
 	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
-		android:layout_height="135dp" android:id="@+id/graphJitter" 		
+		android:layout_height="120dp" android:id="@+id/graphJitter" 		
         android:layout_weight="1"/>
+	
+		</TableRow>
+		
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/editText1"
+                android:layout_height="50dp"
+                android:layout_width="wrap_content"
+                android:text=""
+                android:textColor="#FFFFFF"
+                android:textAppearance="?android:attr/textAppearanceSmall" />   
 	
 		</TableRow>
 		

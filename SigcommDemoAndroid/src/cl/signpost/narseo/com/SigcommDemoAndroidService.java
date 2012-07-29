@@ -373,7 +373,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 
 		  public void run() {
 			Log.i(TAG, "Receiver Thread Running ");
-		    byte[] buffer = new byte[1024];
+		    byte[] buffer = new byte[100];
 		    while (testAlive) {
 
 		      DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
@@ -382,7 +382,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		        Log.i(TAG, "udp receiver got smthing");
 		        String s = new String(dp.getData(), 0, dp.getLength());
 		        Log.i(TAG, "UDP Receiver> "+s);
-		        Thread.yield();
+		        //Thread.yield();
 		      } catch (Exception ex) {
 			      Log.e(TAG, "Exception on UdpReceiver thread > "+ex.getMessage());
 		      }

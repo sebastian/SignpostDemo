@@ -72,7 +72,8 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	
 	//public static final int [] IP_ADDR = {10, 20, 1, 118};
 	public static final int [] IP_ADDR = {192, 168, 1, 94};
-	//public static final int [] IP_ADDR = {192, 168, 0, 10};
+	//192.168.1.80
+	//public static final int [] IP_ADDR = {192, 168, 1, 80};
 	//public static final int [] IP_ADDR = {192, 168, 43, 7};
 	
 	private static final int MAX_HISTORIC_VALS = 40;
