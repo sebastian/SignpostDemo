@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.DecimalFormat;
 import java.util.Random;
 
 import cl.signpost.narseo.com.TestsSignpost.Messages;
@@ -371,8 +372,11 @@ and jitter:
 		    	  	//Info sent to server (hostname;timestamp;jitter) + -1 indicating start RTT test
 
 			        long t1 = System.currentTimeMillis();
-		    	  	String p0 = devName+"\r\n"+0+"\r\n"+(float)t1/1000.0f+"\r\n";
-		    	  	Log.i(TAG, "PO "+ p0);
+			        
+		    	  	//String p0 = devName+";"+0+";"+new DecimalFormat("#.###").format((float)t1/1000.0f)+";";
+		    	  	String p0 = devName+";"+0+";"+t1+";";
+		    	  	
+		    	  	//Log.i(TAG, "PO "+ p0);
 			        //Log.e(TAG, "Sending UDP: "+theLine);
 			        byte[] data = p0.getBytes();
 			        DatagramPacket dpSend = new DatagramPacket(data, data.length, server, port);
@@ -383,12 +387,15 @@ and jitter:
 			        clientSocket.receive(dpReceive);
 			        long t2 = System.currentTimeMillis();
 			        String r1 = new String(dpReceive.getData(), 0, dpReceive.getLength());
-			        Log.e(TAG, "Server response: "+r1);		
+			        //Log.e(TAG, "Server response1: "+r1);		
 
-			        /*Send response to server*/
-			        long t3 = System.currentTimeMillis();			        
-			        String p1 = devName+"\r\n"+1+"\r\n"+(float)t3/1000.0f+"\r\n";
 			        
+			        /*Send response to server*/
+			        long t3 = System.currentTimeMillis();			    
+			        //String p1 = devName+";"+1+";"+new DecimalFormat("#.###").format((float)t3/1000.0f)+";";
+			        String p1 = devName+";"+1+";"+t3+";";
+		    	  	
+			        //Log.i(TAG, "Send over udp: "+p1);
 			        data = p1.getBytes();
 			        dpSend = new DatagramPacket(data, data.length,server, port);			        
 			        clientSocket.send(dpSend);
@@ -398,11 +405,12 @@ and jitter:
 			        clientSocket.receive(dpReceive);
 			        long t4 = System.currentTimeMillis();
 			        String r2 = new String(dpReceive.getData(), 0, dpReceive.getLength());
-			        Log.e(TAG, "Server response: "+r2);		
+			        //Log.e(TAG, "Server response2: "+r2);		
 
 			        
 			        //Compute values!!! t1,t2,t3,t4, r1 and r2
-			        
+			        long rtt=((t4-t3)+(t2-t1))/2;
+			        System.out.println("RTT: "+rtt);
 			        long error = System.currentTimeMillis()-t1;
 			        //Sleep thread
 			        Log.i(TAG, "Sleep error "+error);

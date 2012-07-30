@@ -43,7 +43,7 @@ let udp_handler ~content ~dst =
       match (int_of_string seqNumber) with
         | 0 -> begin
             let _ = Store.set_initial_timestamp hostname (Unix.gettimeofday ()) in
-            let initTs = Int64.of_float ((Unix.gettimeofday ()) *. 100.0)  in 
+            let initTs = Int64.of_float ((Unix.gettimeofday ()) *. 1000.0)  in 
             Lwt.ignore_result (Udp_server.send_datagram (sprintf "server;0;%Ld;" initTs) 
                              (ADDR_INET(inet_addr, _port)));
             Printf.printf "Device: %s (seq:0 - %Ld)\n%!" hostname initTs;
@@ -54,7 +54,7 @@ let udp_handler ~content ~dst =
             (*Jitter measured based on seqNumber*)
             let initialTime = Store.get_initial_timestamp hostname in
             let currentTs = Unix.gettimeofday () in 
-            let current_time = Int64.of_float ((Unix.gettimeofday ()) *. 100.0)  in 
+            let current_time = Int64.of_float ((Unix.gettimeofday ()) *. 1000.0)  in 
             Lwt.ignore_result (Udp_server.send_datagram (sprintf "server;1;%Ld;" current_time)
                              (ADDR_INET(inet_addr, _port)));
             Printf.printf "Device: %s (seq:1 - %f) Initial time: %f\n%!" hostname currentTs initialTime;
