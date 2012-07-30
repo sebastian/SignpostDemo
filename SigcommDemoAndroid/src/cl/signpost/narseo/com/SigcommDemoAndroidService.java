@@ -353,31 +353,58 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				DatagramSocket clientSocket = new DatagramSocket();
 		      //BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
 		      
+				/*
+				 * - client -> server: id,0,client_timestamp1
+- server -> client: 0,server_timestamp1
+- client -> server: id,1,client_timestamp2
+- server -> client: 1,server_timestamp2
+
+then: clientRtt = client_timestamp2-client_timestamp1
+idem for server
+and jitter:
+(client_timestamp2-client_timestamp1)-(server_timestamp2-server_timestamp1)
+[30/07/2012 01:41:33] Narseo: this can be done every 1 sec
+[30/07/2012 01:42:26] Narseo: it's based on deltas so it should be fine
+				 */
 		      while (testAlive) {
 		    	  try{
-		    	  	long enterLoop = System.currentTimeMillis();
-			    	//Info sent to server (hostname;timestamp;jitter) + -1 indicating start RTT test
-			        String theLine = devName+"\r\n"+0+"\r\n";
+		    	  	//Info sent to server (hostname;timestamp;jitter) + -1 indicating start RTT test
+
+			        long t1 = System.currentTimeMillis();
+		    	  	String p0 = devName+"\r\n"+0+"\r\n"+(float)t1/1000.0f+"\r\n";
+		    	  	Log.i(TAG, "PO "+ p0);
 			        //Log.e(TAG, "Sending UDP: "+theLine);
-			        byte[] data = theLine.getBytes();
-			        long sendTime = System.currentTimeMillis();
+			        byte[] data = p0.getBytes();
 			        DatagramPacket dpSend = new DatagramPacket(data, data.length, server, port);
 			        clientSocket.send(dpSend);
+			        
 			        /*Wait for server response and client estimate RTT*/
-			        DatagramPacket dpReceive = new DatagramPacket(receiveData, receiveData.length);
-			         
+			        DatagramPacket dpReceive = new DatagramPacket(receiveData, receiveData.length);			         
 			        clientSocket.receive(dpReceive);
-			        String response = new String(dpReceive.getData(), 0, dpReceive.getLength());
-			        Log.e(TAG, "Server response: "+response);
-			        long localRtt=System.currentTimeMillis()-sendTime;
-			        Log.i(TAG, "UDP RTT: "+localRtt);
+			        long t2 = System.currentTimeMillis();
+			        String r1 = new String(dpReceive.getData(), 0, dpReceive.getLength());
+			        Log.e(TAG, "Server response: "+r1);		
+
 			        /*Send response to server*/
-			        theLine = devName+"\r\n"+localRtt+"\r\n";
-			        data = theLine.getBytes();
+			        long t3 = System.currentTimeMillis();			        
+			        String p1 = devName+"\r\n"+1+"\r\n"+(float)t3/1000.0f+"\r\n";
+			        
+			        data = p1.getBytes();
 			        dpSend = new DatagramPacket(data, data.length,server, port);			        
 			        clientSocket.send(dpSend);
 
-			        long error = (System.currentTimeMillis()-enterLoop);
+			        /*Wait for server response and client estimate RTT*/
+			        dpReceive = new DatagramPacket(receiveData, receiveData.length);			         
+			        clientSocket.receive(dpReceive);
+			        long t4 = System.currentTimeMillis();
+			        String r2 = new String(dpReceive.getData(), 0, dpReceive.getLength());
+			        Log.e(TAG, "Server response: "+r2);		
+
+			        
+			        //Compute values!!! t1,t2,t3,t4, r1 and r2
+			        
+			        long error = System.currentTimeMillis()-t1;
+			        //Sleep thread
 			        Log.i(TAG, "Sleep error "+error);
 			        Thread.sleep(2000-error);
 			    }
