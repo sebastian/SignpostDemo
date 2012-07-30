@@ -42,24 +42,26 @@ let udp_handler ~content ~dst =
     | hostname::seqNumber::ts::_ -> begin
       match (int_of_string seqNumber) with
         | 0 -> begin
-            Lwt.ignore_result (Udp_server.send_datagram (sprintf "server;0;%f" (Unix.gettimeofday ())) 
+            let _ = Store.set_initial_timestamp hostname (Unix.gettimeofday ()) in
+            let initTs = Int64.of_float ((Unix.gettimeofday ()) *. 100.0)  in 
+            Lwt.ignore_result (Udp_server.send_datagram (sprintf "server;0;%Ld;" initTs) 
                              (ADDR_INET(inet_addr, _port)));
-            Lwt.ignore_result (Udp_server.send_datagram (sprintf "server;3;%f" (Unix.gettimeofday ())) 
-                             (ADDR_INET(inet_addr, _port)));
-            Printf.printf "Device: %s (seq:0 - %s)\n%!" hostname ts;
-            let _ = Store.set_initial_timestamp hostname (float_of_string ts) in
+            Printf.printf "Device: %s (seq:0 - %Ld)\n%!" hostname initTs;
               return ()
           end
         | 1 -> begin 
             (* Get elapsed time since initial timestamp *)
             (*Jitter measured based on seqNumber*)
             let initialTime = Store.get_initial_timestamp hostname in
-            let current_time = float_of_string ts in
-            Printf.printf "Device: %s (seq:1 - %s) Initial time: %f\n%!" hostname ts initialTime;
-            let elapsedTime = (current_time -. initialTime) in
-            let jitterVal = abs_float (current_time -. initialTime) in
-              Printf.printf "Elapsed time %f\n%!" jitterVal;
-              Stats_sender.send_jitter hostname jitterVal
+            let currentTs = Unix.gettimeofday () in 
+            let current_time = Int64.of_float ((Unix.gettimeofday ()) *. 100.0)  in 
+            Lwt.ignore_result (Udp_server.send_datagram (sprintf "server;1;%Ld;" current_time)
+                             (ADDR_INET(inet_addr, _port)));
+            Printf.printf "Device: %s (seq:1 - %f) Initial time: %f\n%!" hostname currentTs initialTime;
+            let elapsedTime = (currentTs -. initialTime) in
+(*             let jitterVal = Int64.sub current_time initialTime in *)
+              Printf.printf "Elapsed time %f\n%!" elapsedTime ;
+              Stats_sender.send_jitter hostname elapsedTime 
           end
       end
     | _ ->
@@ -139,6 +141,7 @@ let main () =
   Lwt_engine.set (new Lwt_engine.select);
   Store.thread ();
   Udp_server.thread ~address:"0.0.0.0" ~port:(int_of_string udp_listening_port) udp_handler;
+  lwt _ = Stats_sender.send_jitter "client1" 0.0121 in 
   Tcp_server.simple 
       ~sockaddr:(ADDR_INET (inet_addr_any, 7777)) 
       ~timeout:None

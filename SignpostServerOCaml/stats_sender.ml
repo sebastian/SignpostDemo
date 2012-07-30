@@ -2,7 +2,8 @@ open Lwt
 
 let stats_server_name = "ec2-107-20-107-204.compute-1.amazonaws.com" 
 (* let stats_server_name = "107.20.107.204" *)
-let stats_server_port = 1180
+let stats_server_path = "/1.0/event/put"
+let stats_server_port = 1080
 
 lwt stats_dst = try_lwt
   let hent = Unix.gethostbyname stats_server_name in
@@ -16,6 +17,14 @@ let get_current_time_str =
     (timestamp.Unix.tm_mon+1) timestamp.Unix.tm_mday timestamp.Unix.tm_hour
     timestamp.Unix.tm_min timestamp.Unix.tm_sec in
   time_str
+
+let send_stats message =
+  let curl_command = Printf.sprintf "curl -d '%s' http://%s:%d%s" message
+    stats_server_name stats_server_port stats_server_path in
+  Printf.printf "%s\n%!" message;
+  Printf.printf "%s\n%!" curl_command;
+  lwt _ = Lwt_unix.system curl_command in 
+    return ()
 
 let stats_message client_id message_time dataField data = 
   let open Json in
@@ -33,34 +42,16 @@ let send_downstream_bandwidth client_id bw =
   let open Json in
   let current_time = get_current_time_str in
   let message = stats_message client_id current_time "bandwidth" bw in
-  Udp_server.send_datagram message stats_dst
+  send_stats message
 
 let send_client_latency client_id latency = 
   let open Json in
   let current_time = get_current_time_str in
   let message = stats_message client_id current_time "latency" latency in
-  Udp_server.send_datagram message stats_dst
+  send_stats message
 
 let send_jitter client_id jitter = 
   let open Json in
   let current_time = get_current_time_str in
   let message = stats_message client_id current_time "jitter" jitter in
-  lwt _ = Udp_server.send_datagram message stats_dst in
-    return ()
-
-(* let call mgr ?src ?headers kind request_body url =
-  let meth = match kind with
-    |`GET -> "GET" |`HEAD -> "HEAD" |`PUT -> "PUT" 
-    |`DELETE -> "DELETE" |`POST -> "POST" in
-  let endp = parse_url url in
-  let host, port, path = endp in
-  (* TODO DNS resolution! *)
-  lwt dst_ip = match Net.Nettypes.ipv4_addr_of_string host with
-    |Some ip -> return ip
-    |None -> fail (Invalid_url)
-  in
-  let dst = dst_ip, port in
-  Net.Channel.connect mgr ?src dst (fun t ->
-    do_request t headers meth request_body endp >>
-    read_response channel
-  ) *)
+  send_stats message
