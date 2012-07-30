@@ -138,7 +138,6 @@ let tcp_handler ~clisockaddr ~srvsockaddr ic oc =
   done
 
 let main () =
-  Printf.printf "Starting program \n";
   Lwt_engine.set (new Lwt_engine.select);
   Store.thread ();
   Udp_server.thread ~address:"0.0.0.0" ~port:(int_of_string udp_listening_port) udp_handler;

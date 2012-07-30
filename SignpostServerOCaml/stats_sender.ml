@@ -2,7 +2,8 @@ open Lwt
 
 let stats_server_name = "ec2-107-20-107-204.compute-1.amazonaws.com" 
 (* let stats_server_name = "107.20.107.204" *)
-let stats_server_port = 1180
+let stats_server_path = "/1.0/event/put"
+let stats_server_port = 1080
 
 lwt stats_dst = try_lwt
   let hent = Unix.gethostbyname stats_server_name in
@@ -18,7 +19,11 @@ let get_current_time_str =
   time_str
 
 let send_stats message =
-  Printf.printf "%s\n" message
+  let curl_command = Printf.sprintf "curl -d '%s' http://%s:%d%s" message
+    stats_server_name stats_server_port stats_server_path in
+  Printf.printf "%s\n%!" message;
+  Printf.printf "%s\n%!" curl_command;
+  Lwt_unix.system curl_command
 
 let stats_message client_id message_time dataField data = 
   let open Json in
