@@ -4,7 +4,7 @@ open Client
 
 let stats_server_name = "ec2-107-20-107-204.compute-1.amazonaws.com" 
 (* let stats_server_name = "107.20.107.204" *)
-let stats_server_port = 1080
+let stats_server_port = 1180
 
 lwt stats_dst = try_lwt
   let hent = Unix.gethostbyname stats_server_name in
@@ -14,20 +14,20 @@ with _ ->
 
 let get_current_time_str =
   let timestamp = Unix.gmtime(Unix.time()) in
-  let time_str = Printf.sprintf "%02d-%02d-%02dT%02d:%02d:%02dZ" (timestamp.Unix.tm_year - 100)
-    timestamp.Unix.tm_mon timestamp.Unix.tm_mday timestamp.Unix.tm_hour
+  let time_str = Printf.sprintf "%04d-%02d-%02dT%02d:%02d:%02dZ" (timestamp.Unix.tm_year + 1900 )
+    (timestamp.Unix.tm_mon+1) timestamp.Unix.tm_mday timestamp.Unix.tm_hour
     timestamp.Unix.tm_min timestamp.Unix.tm_sec in
   time_str
 
 let stats_message client_id message_time dataField data = 
   let open Json in
-  let message = Json.Object
+  let message = Json.Array [ Json.Object
     [("type", Json.String "stats"); 
      ("time", Json.String message_time); 
      ("data", Json.Object 
        [("node", Json.String client_id);
         (dataField, Json.Float data)]
-     )] in
+     )]] in
   let message_str = Json.to_string message in
   message_str
 
