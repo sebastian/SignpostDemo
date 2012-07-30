@@ -1,6 +1,5 @@
 open Lwt
 open Cohttp
-open Client
 
 let stats_server_name = "ec2-107-20-107-204.compute-1.amazonaws.com" 
 (* let stats_server_name = "107.20.107.204" *)
@@ -47,9 +46,10 @@ let send_jitter client_id jitter =
   let open Json in
   let current_time = get_current_time_str in
   let message = stats_message client_id current_time "jitter" jitter in
-  Udp_server.send_datagram message stats_dst
+  lwt _ = Udp_server.send_datagram message stats_dst in
+    return ()
 
-let call mgr ?src ?headers kind request_body url =
+(* let call mgr ?src ?headers kind request_body url =
   let meth = match kind with
     |`GET -> "GET" |`HEAD -> "HEAD" |`PUT -> "PUT" 
     |`DELETE -> "DELETE" |`POST -> "POST" in
@@ -64,4 +64,4 @@ let call mgr ?src ?headers kind request_body url =
   Net.Channel.connect mgr ?src dst (fun t ->
     do_request t headers meth request_body endp >>
     read_response channel
-  )
+  ) *)
