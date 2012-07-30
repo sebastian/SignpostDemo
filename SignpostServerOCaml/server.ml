@@ -10,6 +10,9 @@ let udp_listening_port = "57654"
 (* let udp_sending_port = "57655" *)
 let d = String.create num_bytes
 
+(*
+ * *)
+
 let jitter_sender ~clientsocket ~client_id ~udp_port =
   let send_loop ip port =
     let hostname = "server" in
@@ -33,37 +36,32 @@ let jitter_sender ~clientsocket ~client_id ~udp_port =
       send_loop ip udp_port
 
 let udp_handler ~content ~dst = 
-  let rgxp = regexp "\r\n" in
+  let rgxp = regexp ";" in
   let ADDR_INET(inet_addr, _port) = dst in 
   match (split rgxp content) with
-(*    | [hostname; seqNumber] -> *)
-    | hostname::seqNumber::_ ->
-      let current_time = Unix.gettimeofday() in
-      let float_seqnumber =  float_of_string seqNumber in
-      Printf.printf "Device: %s \n%!" hostname;
-      Printf.printf "Sequence number: %f \n%!" float_seqnumber; 
-      let jitter_seen_locally = 
-        match float_seqnumber with 
-          | 0.0 -> 
-              (Store.set_initial_timestamp hostname current_time;
-              Printf.printf "Timestamp saved: %f\n%!" current_time);
-              0.0
-          | float_seqnumber -> 
-              (* Get elapsed time since initial timestamp *)
-              (*Jitter measured based on seqNumber*)
-              (let initialTime = Store.get_initial_timestamp hostname in
-              let _ = Printf.printf "Initial time: %f\n%!" initialTime in
-              let elapsedTime = (current_time -. initialTime) in
-              let jitterVal = abs_float (float_seqnumber*.0.1 -. elapsedTime) in
-                Printf.printf "Elapsed time %f - SeqNumber/Jitter %f/%f\n%!" 
-                  elapsedTime float_seqnumber jitterVal;
-                jitterVal)
-      in
-        Stats_sender.send_jitter hostname jitter_seen_locally;
-        printf "%s:%d\n%!" (Unix.string_of_inet_addr inet_addr) _port;
-        Lwt.ignore_result (Udp_server.send_datagram (sprintf "%f\r\n" jitter_seen_locally) 
+    | hostname::seqNumber::ts::_ -> begin
+      match (int_of_string seqNumber) with
+        | 0 -> begin
+            Lwt.ignore_result (Udp_server.send_datagram (sprintf "server;0;%f" (Unix.gettimeofday ())) 
                              (ADDR_INET(inet_addr, _port)));
-        return ()
+            Lwt.ignore_result (Udp_server.send_datagram (sprintf "server;3;%f" (Unix.gettimeofday ())) 
+                             (ADDR_INET(inet_addr, _port)));
+            Printf.printf "Device: %s (seq:0 - %s)\n%!" hostname ts;
+            let _ = Store.set_initial_timestamp hostname (float_of_string ts) in
+              return ()
+          end
+        | 1 -> begin 
+            (* Get elapsed time since initial timestamp *)
+            (*Jitter measured based on seqNumber*)
+            let initialTime = Store.get_initial_timestamp hostname in
+            let current_time = float_of_string ts in
+            Printf.printf "Device: %s (seq:1 - %s) Initial time: %f\n%!" hostname ts initialTime;
+            let elapsedTime = (current_time -. initialTime) in
+            let jitterVal = abs_float (current_time -. initialTime) in
+              Printf.printf "Elapsed time %f\n%!" jitterVal;
+              Stats_sender.send_jitter hostname jitterVal
+          end
+      end
     | _ ->
       Printf.printf "Malformed UDP jitter packet. \n%!";
       return () 
