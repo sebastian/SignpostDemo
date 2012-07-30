@@ -7,7 +7,7 @@ open Re_str
 let bytes_per_megabit = 131072.0
 let num_bytes = 1000000
 let udp_listening_port = "57654"
-let udp_sending_port = "57655"
+(* let udp_sending_port = "57655" *)
 let d = String.create num_bytes
 
 let jitter_sender ~clientsocket ~client_id ~udp_port =
@@ -62,7 +62,7 @@ let udp_handler ~content ~dst =
         Stats_sender.send_jitter hostname jitter_seen_locally;
         printf "%s:%d\n%!" (Unix.string_of_inet_addr inet_addr) _port;
         Lwt.ignore_result (Udp_server.send_datagram (sprintf "%f\r\n" jitter_seen_locally) 
-                             (ADDR_INET(inet_addr, 5001)));
+                             (ADDR_INET(inet_addr, _port)));
         return ()
     | _ ->
       Printf.printf "Malformed UDP jitter packet. \n%!";
