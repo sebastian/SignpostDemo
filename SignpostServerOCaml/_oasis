@@ -13,5 +13,5 @@ Executable sp
   Custom:             true
   CompiledObject:     best
   Install:            false
-  BuildDepends:       lwt.syntax, lwt.unix, re, re.str
+  BuildDepends:       lwt.syntax, lwt.unix, re, re.str, cohttp
 

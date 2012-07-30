@@ -1,4 +1,6 @@
 open Lwt
+open Cohttp
+open Client
 
 let stats_server_name = "ec2-107-20-107-204.compute-1.amazonaws.com" 
 (* let stats_server_name = "107.20.107.204" *)
@@ -47,3 +49,19 @@ let send_jitter client_id jitter =
   let message = stats_message client_id current_time "jitter" jitter in
   Udp_server.send_datagram message stats_dst
 
+let call mgr ?src ?headers kind request_body url =
+  let meth = match kind with
+    |`GET -> "GET" |`HEAD -> "HEAD" |`PUT -> "PUT" 
+    |`DELETE -> "DELETE" |`POST -> "POST" in
+  let endp = parse_url url in
+  let host, port, path = endp in
+  (* TODO DNS resolution! *)
+  lwt dst_ip = match Net.Nettypes.ipv4_addr_of_string host with
+    |Some ip -> return ip
+    |None -> fail (Invalid_url)
+  in
+  let dst = dst_ip, port in
+  Net.Channel.connect mgr ?src dst (fun t ->
+    do_request t headers meth request_body endp >>
+    read_response channel
+  )
