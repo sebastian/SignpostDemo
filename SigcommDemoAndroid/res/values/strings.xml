@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="hello">Hello World, SigcommDemoAndroidActivity!</string>
-    <string name="app_name">Signpost Diagnosis</string>
+    <string name="app_name">Signpost Diagnosis Tool</string>
     <string name="NS">http://schemas.android.com/apk/res/net.snowdon</string>
 </resources>

@@ -73,6 +73,12 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	static SenderThread sender  = null;
 
 	
+	/*
+	 * Configures parameters and links to main activity
+	 */
+	public static void setName(String dnsName){
+		devName = dnsName;
+	}
 
 	  
 	/*
@@ -126,10 +132,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public void onCreate(){
 		super.onCreate();
 		Log.e(TAG, "OnCreate()");
+		Log.i(TAG, "Device Name: "+devName);
 		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "WAKELOCK");
 		wl.acquire();
-		devName = android.os.Build.DEVICE+":"+android.os.Build.MODEL+ " ("+ android.os.Build.PRODUCT + ")";
+		//devName = android.os.Build.DEVICE+":"+android.os.Build.MODEL+ " ("+ android.os.Build.PRODUCT + ")";
 		Log.e(TAG, "WakeLock acquired by service");
 		Thread th = new Thread(this);
 		th.start();

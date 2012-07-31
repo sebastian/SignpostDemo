@@ -107,7 +107,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.main2);
         
         errorView = (TextView) findViewById(R.id.editText1);
         startButton =(Button) findViewById(R.id.startTest);        

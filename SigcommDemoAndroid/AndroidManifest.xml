@@ -14,13 +14,25 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
         <activity
-            android:name=".SigcommDemoAndroidActivity"
-            android:label="@string/app_name" >
+            android:name=".IntroView"
+            android:label="@string/app_name" 
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".SigcommDemoAndroidActivity"
+            android:label="@string/app_name" 
+            android:screenOrientation="portrait">
+  <!--         <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            -->   
         </activity>
         <service android:label="BackgroundService" android:name="SigcommDemoAndroidService"></service>
     </application>
