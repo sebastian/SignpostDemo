@@ -159,6 +159,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			case LATENCY_DOWNSTREAM_ID:
 				extraVal = REFRESH_LATENCYDOWNSTREAM_INTENT;
 				break;
+			case JITTER_ID:
+				extraVal = REFRESH_JITTER_INTENT;
+				break;
 			default:
 				Log.i(TAG, "Unknown value");
 				return;				
@@ -242,7 +245,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				in = inFromServer.readLine();
 				int numBytes = Integer.parseInt(in);				
 				int latency = (int)(System.currentTimeMillis()-startTime)*1000/2;							
-				notifyActivity(latency, LATENCY_UPSTREAM_ID);
+				//notifyActivity(latency, LATENCY_UPSTREAM_ID);
 				
 				Log.i(TAG, "Packet Length (string): "+in+" - Packet Length (int): "+numBytes);
 				long startDownloadTime = System.currentTimeMillis();                
@@ -268,7 +271,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				
 				//Wait for server latency
 				int serverLatencyInt = Integer.parseInt(inFromServer.readLine());
-				notifyActivity (serverLatencyInt, LATENCY_DOWNSTREAM_ID);				
+				//notifyActivity (serverLatencyInt, LATENCY_DOWNSTREAM_ID);				
 				
 				
 				//GET UPSTREAM GOODPUT
@@ -406,15 +409,30 @@ and jitter:
 			        long t4 = System.currentTimeMillis();
 			        String r2 = new String(dpReceive.getData(), 0, dpReceive.getLength());
 			        //Log.e(TAG, "Server response2: "+r2);		
-
+			        //server;1;1343690067729;
 			        
 			        //Compute values!!! t1,t2,t3,t4, r1 and r2
 			        long rtt=((t4-t3)+(t2-t1))/2;
-			        System.out.println("RTT: "+rtt);
+			        String [] serverResp1 = r1.split(";");
+			        String [] serverResp2 = r2.split(";");
+			        
+			        long servTimestamp1 = Long.parseLong(serverResp1[2]);
+			        long servTimestamp2 = Long.parseLong(serverResp2[2]);
+			        long deltaRemote = servTimestamp2-servTimestamp1;
+			        long deltaLocal = t3-t1;
+			        //Log.i(TAG, "R1: "+servTimestamp1+"; R2: "+servTimestamp2+"; DELTA: "+(servTimestamp2-servTimestamp1));
+			        
+			        long jitter = Math.abs(deltaLocal-deltaRemote);
+			        notifyActivity((int)rtt*1000, LATENCY_DOWNSTREAM_ID);
+			        notifyActivity((int)jitter*1000, JITTER_ID);
+			        
+			        System.out.println("RTT: "+rtt+"\tJitter: "+jitter);
+			        
 			        long error = System.currentTimeMillis()-t1;
 			        //Sleep thread
-			        Log.i(TAG, "Sleep error "+error);
+			        //Log.i(TAG, "Sleep error "+error);
 			        Thread.sleep(2000-error);
+			        
 			    }
 			    catch(Exception e){
 			    	Log.e(TAG, "Test failed: "+e.getMessage());

@@ -58,7 +58,16 @@
         android:stretchColumns="0,1">
 
 
-
+        <TableRow
+            android:id="@+id/tableRow2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+    
+	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
+		android:layout_height="120dp" android:id="@+id/graphGoodput" 		
+        android:layout_weight="1"/>
+	
+		</TableRow>
 
         <TableRow
             android:id="@+id/tableRow1"
@@ -73,16 +82,7 @@
 		
         
         
-        <TableRow
-            android:id="@+id/tableRow2"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-    
-	<uk.ac.cam.cl.dtg.snowdon.AreaGraphView android:layout_width="wrap_content"
-		android:layout_height="120dp" android:id="@+id/graphGoodput" 		
-        android:layout_weight="1"/>
-	
-		</TableRow>
+
 		
         
         <TableRow

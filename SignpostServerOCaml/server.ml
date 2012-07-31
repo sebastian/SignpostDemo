@@ -5,7 +5,7 @@ open Printf
 open Re_str 
 
 let bytes_per_megabit = 131072.0
-let num_bytes = 1000000
+let num_bytes = 400000
 let udp_listening_port = "57654"
 (* let udp_sending_port = "57655" *)
 let d = String.create num_bytes
