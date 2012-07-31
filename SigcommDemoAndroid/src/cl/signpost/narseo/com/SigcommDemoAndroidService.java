@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.DecimalFormat;
 import java.util.Random;
 
 import cl.signpost.narseo.com.TestsSignpost.Messages;
@@ -72,6 +73,12 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	static SenderThread sender  = null;
 
 	
+	/*
+	 * Configures parameters and links to main activity
+	 */
+	public static void setName(String dnsName){
+		devName = dnsName;
+	}
 
 	  
 	/*
@@ -125,10 +132,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public void onCreate(){
 		super.onCreate();
 		Log.e(TAG, "OnCreate()");
+		Log.i(TAG, "Device Name: "+devName);
 		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "WAKELOCK");
 		wl.acquire();
-		devName = android.os.Build.DEVICE+":"+android.os.Build.MODEL+ " ("+ android.os.Build.PRODUCT + ")";
+		//devName = android.os.Build.DEVICE+":"+android.os.Build.MODEL+ " ("+ android.os.Build.PRODUCT + ")";
 		Log.e(TAG, "WakeLock acquired by service");
 		Thread th = new Thread(this);
 		th.start();
@@ -157,6 +165,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				break;
 			case LATENCY_DOWNSTREAM_ID:
 				extraVal = REFRESH_LATENCYDOWNSTREAM_INTENT;
+				break;
+			case JITTER_ID:
+				extraVal = REFRESH_JITTER_INTENT;
 				break;
 			default:
 				Log.i(TAG, "Unknown value");
@@ -241,7 +252,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				in = inFromServer.readLine();
 				int numBytes = Integer.parseInt(in);				
 				int latency = (int)(System.currentTimeMillis()-startTime)*1000/2;							
-				notifyActivity(latency, LATENCY_UPSTREAM_ID);
+				//notifyActivity(latency, LATENCY_UPSTREAM_ID);
 				
 				Log.i(TAG, "Packet Length (string): "+in+" - Packet Length (int): "+numBytes);
 				long startDownloadTime = System.currentTimeMillis();                
@@ -267,7 +278,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				
 				//Wait for server latency
 				int serverLatencyInt = Integer.parseInt(inFromServer.readLine());
-				notifyActivity (serverLatencyInt, LATENCY_DOWNSTREAM_ID);				
+				//notifyActivity (serverLatencyInt, LATENCY_DOWNSTREAM_ID);				
 				
 				
 				//GET UPSTREAM GOODPUT
@@ -371,8 +382,11 @@ and jitter:
 		    	  	//Info sent to server (hostname;timestamp;jitter) + -1 indicating start RTT test
 
 			        long t1 = System.currentTimeMillis();
-		    	  	String p0 = devName+"\r\n"+0+"\r\n"+(float)t1/1000.0f+"\r\n";
-		    	  	Log.i(TAG, "PO "+ p0);
+			        
+		    	  	//String p0 = devName+";"+0+";"+new DecimalFormat("#.###").format((float)t1/1000.0f)+";";
+		    	  	String p0 = devName+";"+0+";"+t1+";";
+		    	  	
+		    	  	//Log.i(TAG, "PO "+ p0);
 			        //Log.e(TAG, "Sending UDP: "+theLine);
 			        byte[] data = p0.getBytes();
 			        DatagramPacket dpSend = new DatagramPacket(data, data.length, server, port);
@@ -383,12 +397,15 @@ and jitter:
 			        clientSocket.receive(dpReceive);
 			        long t2 = System.currentTimeMillis();
 			        String r1 = new String(dpReceive.getData(), 0, dpReceive.getLength());
-			        Log.e(TAG, "Server response: "+r1);		
+			        //Log.e(TAG, "Server response1: "+r1);		
 
-			        /*Send response to server*/
-			        long t3 = System.currentTimeMillis();			        
-			        String p1 = devName+"\r\n"+1+"\r\n"+(float)t3/1000.0f+"\r\n";
 			        
+			        /*Send response to server*/
+			        long t3 = System.currentTimeMillis();			    
+			        //String p1 = devName+";"+1+";"+new DecimalFormat("#.###").format((float)t3/1000.0f)+";";
+			        String p1 = devName+";"+1+";"+t3+";";
+		    	  	
+			        //Log.i(TAG, "Send over udp: "+p1);
 			        data = p1.getBytes();
 			        dpSend = new DatagramPacket(data, data.length,server, port);			        
 			        clientSocket.send(dpSend);
@@ -398,15 +415,31 @@ and jitter:
 			        clientSocket.receive(dpReceive);
 			        long t4 = System.currentTimeMillis();
 			        String r2 = new String(dpReceive.getData(), 0, dpReceive.getLength());
-			        Log.e(TAG, "Server response: "+r2);		
-
+			        //Log.e(TAG, "Server response2: "+r2);		
+			        //server;1;1343690067729;
 			        
 			        //Compute values!!! t1,t2,t3,t4, r1 and r2
+			        long rtt=((t4-t3)+(t2-t1))/2;
+			        String [] serverResp1 = r1.split(";");
+			        String [] serverResp2 = r2.split(";");
+			        
+			        long servTimestamp1 = Long.parseLong(serverResp1[2]);
+			        long servTimestamp2 = Long.parseLong(serverResp2[2]);
+			        long deltaRemote = servTimestamp2-servTimestamp1;
+			        long deltaLocal = t3-t1;
+			        //Log.i(TAG, "R1: "+servTimestamp1+"; R2: "+servTimestamp2+"; DELTA: "+(servTimestamp2-servTimestamp1));
+			        
+			        long jitter = Math.abs(deltaLocal-deltaRemote);
+			        notifyActivity((int)rtt*1000, LATENCY_DOWNSTREAM_ID);
+			        notifyActivity((int)jitter*1000, JITTER_ID);
+			        
+			        System.out.println("RTT: "+rtt+"\tJitter: "+jitter);
 			        
 			        long error = System.currentTimeMillis()-t1;
 			        //Sleep thread
-			        Log.i(TAG, "Sleep error "+error);
+			        //Log.i(TAG, "Sleep error "+error);
 			        Thread.sleep(2000-error);
+			        
 			    }
 			    catch(Exception e){
 			    	Log.e(TAG, "Test failed: "+e.getMessage());

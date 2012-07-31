@@ -81,18 +81,20 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	private static float [] arrayUpstreamBandwidth = new float[MAX_HISTORIC_VALS];
 	private static float [] arrayDownstreamLatency = new float[MAX_HISTORIC_VALS];
 	private static float [] arrayUpstreamLatency = new float[MAX_HISTORIC_VALS];
+	private static float [] arrayJitter = new float[MAX_HISTORIC_VALS];
 	private static float [] timestampDownstreamBandwidth = new float[MAX_HISTORIC_VALS];
 	private static float [] timestampUpstreamBandwidth = new float[MAX_HISTORIC_VALS];
 	private static float [] timestampDownstreamLatency = new float[MAX_HISTORIC_VALS];
 	private static float [] timestampUpstreamLatency = new float[MAX_HISTORIC_VALS];
+	private static float [] timestampJitter = new float[MAX_HISTORIC_VALS];
 	private static float maxTimestampBandwidth = 0.0f;
 	private static float minTimestampBandwidth = 0.0f;
 	
 	//Parameters about the configuration of the plots, ticks, axis, etc
     private static String [] yTicksLabelsBandwidth = new String []{"0", "10", "20", "30", "40"};
     private static float [] yTicksPosBandwidth = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
-    private static String [] yTicksLabelsLatency = new String []{"0", "0.12", "0.25", "0.37", "0.5"};
-    private static String [] yTicksLabelsJitter = new String []{"0", "2", "4", "6", "8", "10"};
+    private static String [] yTicksLabelsLatency = new String []{"0", "0.1", "0.2", "0.3", "0.4"};
+    private static String [] yTicksLabelsJitter = new String []{"0", "0.1", "0.2", "0.3", "0.4", "0.5"};
     private static float [] yTicksPosJitter = new float []{0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f};
     //Default values
     private static String [] xTicksLabelsTime = new String []{"0s"};
@@ -105,7 +107,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.main2);
         
         errorView = (TextView) findViewById(R.id.editText1);
         startButton =(Button) findViewById(R.id.startTest);        
@@ -116,10 +118,12 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         for (int i=0; i<MAX_HISTORIC_VALS; i++){
         	arrayDownstreamBandwidth [i] = 0.0f;
         	arrayUpstreamBandwidth [i] = 0.0f;
+        	arrayJitter[i]=0.0f;
         	timestampDownstreamBandwidth [i] = 0.0f;
         	timestampUpstreamBandwidth [i] = 0.0f;
         	timestampDownstreamLatency [i] = 0.0f;
         	timestampUpstreamLatency [i] = 0.0f;
+        	timestampJitter [i] = 0.0f;
         }
 
         mGoodputGraph = (GraphView) findViewById(R.id.graphGoodput);
@@ -129,10 +133,10 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         mGoodputGraph.setYAxisLabel("Goodput (Mbps)");
         //mGoodputGraph.setXAxisLabel("Elapsed Time (s)");
         
-        mLatencyGraph.setYAxisLabel("Latency (s)");
+        mLatencyGraph.setYAxisLabel("RTT (s)");
         //mLatencyGraph.setXAxisLabel("Elapsed Time (s)");
         
-        mJitterGraph.setYAxisLabel("Jitter (ms)");
+        mJitterGraph.setYAxisLabel("Jitter (s)");
         mJitterGraph.setXAxisLabel("Elapsed Time (s)");
         
         
@@ -144,8 +148,9 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         mGoodputGraph.setXLabels(xTicksLabelsTime);
         mGoodputGraph.setXLabelPositions(xTicksPosBandwidth);
         
-        mLatencyGraph.setYLabels(yTicksLabelsLatency);
-        mLatencyGraph.setYLabelPositions(yTicksPosBandwidth);    
+        //Same axis as jitter
+        mLatencyGraph.setYLabels(yTicksLabelsJitter);
+        mLatencyGraph.setYLabelPositions(yTicksPosJitter);    
         mLatencyGraph.setXLabels(xTicksLabelsTime);
         mLatencyGraph.setXLabelPositions(xTicksPosBandwidth);   
         
@@ -284,7 +289,8 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
                 	//Everything updated at the same time, otherwise time 
                 	//intervals do not match and they might look ugly
                 	plotBandwidthPairs(timestampDownstreamBandwidth, arrayDownstreamBandwidth, timestampUpstreamBandwidth, arrayUpstreamBandwidth);
-                	plotLatencyPairs(timestampDownstreamLatency, arrayDownstreamLatency, timestampUpstreamLatency, arrayUpstreamLatency);
+                	plotLatencySingle(timestampDownstreamLatency, arrayDownstreamLatency);
+                	plotJitterSingle(timestampJitter, arrayJitter);
             	}
             	
             	int goodputDownstreamVal = intent.getIntExtra(REFRESH_GOODPUTDOWNSTREAM_INTENT, -1);
@@ -293,6 +299,13 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
                 	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
                 	updateTimestampArray(timestampDownstreamBandwidth,elapsedTime);                	
                 	arrayDownstreamBandwidth = updateHistoricValFloat(arrayDownstreamBandwidth, (float)goodputDownstreamVal/1000.0f); 
+            	}
+            	int jitterVal = intent.getIntExtra(REFRESH_JITTER_INTENT, -1);
+            	if (jitterVal>-1){
+                	Log.i(TAG, "Received Jitter: "+jitterVal);
+                	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
+                	updateTimestampArray(timestampJitter,elapsedTime);                	
+                	arrayJitter = updateHistoricValFloat(arrayJitter, (float)jitterVal/1000.0f); 
             	}
             }
         }
@@ -326,6 +339,51 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     	}
     	array[array.length-1]=newval;
     	return array;
+    }
+    
+
+    public void plotJitterSingle (float [] timestampsDownstream, float [] arrayLatencyDownstream){
+    	mJitterGraph.redraw();        
+
+        float[][] data1 = {timestampsDownstream, arrayLatencyDownstream};
+        
+        mJitterGraph.setData(new float[][][]{data1}, minValBandwidth,  timestampsDownstream[timestampsDownstream.length-1], 0, 1000);
+        //mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
+
+        float midTime = (maxValBandwidth-minValBandwidth)/2.0f+minValBandwidth;
+        float mid = (float)Math.round(midTime*10)/10;
+        float firstquarterTime = (float)Math.round(((midTime-minValBandwidth)/2.0f+minValBandwidth)*10)/10;
+        float secondquarterTime = (float)Math.round(((maxValBandwidth-midTime)/2.0f+midTime)*10)/10;
+        float max = (float)Math.round(maxValBandwidth*10)/10;
+        float min = (float)Math.round(minValBandwidth*10)/10;
+        
+        String [] xTicksLabelsLatency = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
+        float [] xTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        mJitterGraph.setXLabels(xTicksLabelsLatency);
+        mJitterGraph.setXLabelPositions(xTicksPosLatency);
+    }
+    
+    public void plotLatencySingle (float [] timestampsDownstream, float [] arrayLatencyDownstream){
+    	mLatencyGraph.redraw();        
+
+        float[][] data1 = {timestampsDownstream, arrayLatencyDownstream};
+        
+        mLatencyGraph.setData(new float[][][]{data1}, minValBandwidth,  timestampsDownstream[timestampsDownstream.length-1], 0, 1000);
+        //mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
+
+        float midTime = (maxValBandwidth-minValBandwidth)/2.0f+minValBandwidth;
+        float mid = (float)Math.round(midTime*10)/10;
+        float firstquarterTime = (float)Math.round(((midTime-minValBandwidth)/2.0f+minValBandwidth)*10)/10;
+        float secondquarterTime = (float)Math.round(((maxValBandwidth-midTime)/2.0f+midTime)*10)/10;
+        float max = (float)Math.round(maxValBandwidth*10)/10;
+        float min = (float)Math.round(minValBandwidth*10)/10;
+        
+        String [] xTicksLabelsLatency = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
+        float [] xTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        mLatencyGraph.setXLabels(xTicksLabelsLatency);
+        mLatencyGraph.setXLabelPositions(xTicksPosLatency);
     }
     
     
