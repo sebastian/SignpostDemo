@@ -1,14 +1,26 @@
 [
-{"client":"client1", "server":"home", 
-  "type":"openvpn", "timestamp":"341515", 
-  "bandwidth":"nan", "latency":"nan", "jitter":"nan"},
+{
+  "client":"client1",
+  "server":"home", 
+  "type":"openvpn"
+},
 
-{"client":"client3", "server":"home", 
-  "type":"openvpn", "timestamp":"341515", 
-  "bandwidth":"nan", "latency":"nan", "jitter":"nan"},
+{
+  "client":"client3",
+  "server":"home", 
+  "type":"openvpn"
+},
 
-{"client":"client4", "server":"home", 
-  "type":"iodine", "timestamp":"341515", 
-  "bandwidth":"nan", "latency":"nan", "jitter":"nan"}
+{
+  "client":"client4",
+  "server":"home", 
+  "type":"iodine"
+},
+
+{
+  "client":"client69",
+  "server":"home", 
+  "type":"iodine"
+}
 
 ]
