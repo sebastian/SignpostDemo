@@ -28,22 +28,23 @@ var vis = mainDiv.append("svg:svg")
     .attr("height", h)
   .append("svg:g");
 
+var treeJson;
+
 d3.json("signpost-sigcomm-setup.json", function(json) {
+  treeJson = json;
   updateStructure(root = json);
 });
-d3.json("signpost-sigcomm-connections.json", function(json) {
-  updateTunnels(root = json);
+d3.json("signpost-sigcomm-connections.json", function(tunnelsJson) {
+  updateTunnels(root = tunnelsJson);
 });
 
 setInterval(function() { 
-  d3.json("signpost-sigcomm-setup.json", function(json) {
-    updateStructure(root = json);
-  });
-
   d3.json("signpost-sigcomm-connections.json", function(json) {
     updateTunnels(root = json);
   });
-},1000);
+
+  updateStructure(root = treeJson);
+},10000);
 
 
 
@@ -79,8 +80,9 @@ var nodes = null;
 
 function updateStructure(source) {
 
-  // Compute the new tree layout.
   nodes = tree.nodes(root).reverse();
+  console.log(nodes);
+
   // Update the nodes…
   var node = vis.selectAll("g.node")
       .data(nodes, function(d){ return d.name;} );
@@ -245,15 +247,40 @@ function updateTunnels(tunnels){
   //data and draw links betweent the different positions
   //nodes[i].x, nodes[i].y, nodes[i].name
 
+  pastClients = nodes.filter(function(d) { return d.type == "client"; });
+  newClients = [];
+  staleClients = [];
+    
   tunnels.forEach(function (d){
     d.start = nodes.filter(function(nd){ return nd.name == d.client; })[0];
     d.end = nodes.filter(function(nd){ return nd.name == d.server; })[0];
-    d.tunnelLine = [
-      {y: d.start.x, x: d.start.y}, 
-      {y: (d.start.x+d.end.x)/2, x: (d.start.y+d.start.y)/2+70}, 
-      {y: d.end.x, x: d.end.y}
-    ];
+    if (d.start != null && d.end != null){
+      d.tunnelLine = [
+        {y: d.start.x, x: d.start.y}, 
+        {y: (d.start.x+d.end.x)/2, x: (d.start.y+d.start.y)/2+70}, 
+        {y: d.end.x, x: d.end.y}
+      ];
+    }
+    else
+      d.tunneLine = [
+        {y: d.end.x, x: d.end.y}
+      ];
+
+    // Only retrieving tunnels from the remote server, so is the client 
+    // already in the network tree? If not, add it
+    if (pastClients.filter(function(nd) { return nd.name == d.client; }).length == 0){
+      newClients.push(d.client);
+    }
   });
+
+  // Filter out clients that are no longer there
+  pastClients.forEach(function(d){
+    if (tunnels.filter(function(td) { return td.client == d.name; }).length == 0){
+      staleClients.push(d.name);
+    }
+  });
+
+  treeJson = updateTreeJson(newClients, staleClients, treeJson);
 
   var tunnelData = vis.selectAll(".tunnel")
     .data(tunnels, function(d) { return d.client+"-"+d.server+"-"+d.type;});
@@ -291,6 +318,30 @@ function click(d) {
 
 // d3.select(self.frameElement).style("height", h+"px");
 
+// TODO: very hacked-up version of updating the tree
+// Assumes fixed structure apart from the clients connecting to a specific
+// node, fixed client type
+//
+function updateTreeJson(newNodes, staleNodes, pastTree){
+  homeNatNode = pastTree.children[0].children[1];
+
+  for (i in newNodes){
+    newNode = {
+      name : newNodes[i],
+      parent: homeNatNode,
+      type: "client"
+    };
+    homeNatNode.children.push(newNode);
+  }
+
+  homeNatNode.children = homeNatNode.children.filter(function(d) {
+    return staleNodes.indexOf(d.name) == -1;
+  });
+
+  console.log(homeNatNode);
+
+  return pastTree;
+}
 
 function getSize() {
   var myWidth = 0, myHeight = 0;

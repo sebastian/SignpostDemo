@@ -146,9 +146,23 @@ path.arc {
 
 #title {
   position: absolute;
+  font-size:34px;
   top: 30px;
-  right: 90px;
+  left: 850px;
   height: 50px;
+  width: 400px;
+}
+
+#logos {
+  position: absolute;
+  top: 80px;
+  left: 900px;
+  height: 100px;
+}
+
+#logos img{
+  padding-right: 20px;
+  width: 150px;
 }
 
 path.tunnel-openvpn {
