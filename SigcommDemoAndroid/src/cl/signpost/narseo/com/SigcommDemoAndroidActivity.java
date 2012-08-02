@@ -45,6 +45,8 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	private static Button jitterButton = null;
 	private static Button goodputButton = null;
 	private static TextView errorView = null;
+	//Title for the plot (looks better than adding a label for Y Axis which
+	//is likely to overlap with the tick labels
 	private static TextView title = null;
 	private GraphView graph;
 	
@@ -77,14 +79,10 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 
 	public static final int TCP_PORT = 7777;
 	
-	//public static final int [] IP_ADDR = {10, 20, 1, 118};
+	//TODO: To be changed for a domain
 	public static final int [] IP_ADDR = {192, 168, 1, 94};
-	//192.168.1.80
-	//public static final int [] IP_ADDR = {192, 168, 1, 80};
-	//public static final int [] IP_ADDR = {192, 168, 43, 7};
-	
 
-	
+
 	
 	//Labels for plots
 	private static final String RTT_LABEL = "RTT (ms)";
@@ -107,7 +105,8 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	//Parameters about the configuration of the plots, ticks, axis, etc
     private static float [] yTicksPosition = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
     
-    //Default values
+    //Default values. They should be restarted whenever the stop button is clicked
+    //so the plot is refreshed
     private static String [] yTicksLabelsGoodputDefault = new String []{"0", "10", "20", "30", "40"};
     private static String [] yTicksLabelsRttDefault = new String []{"0", "50", "100", "150", "200"};
     private static String [] yTicksLabelsJitterDefault = new String []{"0", "50", "100", "150", "200"};
@@ -169,13 +168,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         graph.setXLabels(xTicksLabelsTime);
         graph.setXLabelPositions(xTicksPosGoodput);
         
-        
-
-
-
-
-        
-        //Get lock manager
+        //Get power manager and wakeLock
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "My Tag");
         mWakeLock.acquire();
@@ -190,6 +183,10 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         Log.i(TAG, "Signpost Demo Activity. GUI created and resources allocated");
     }
     
+    /*
+     * Called when the button stop is pressed.
+     * Refreshes data stored and also plots
+     */
     public void restartValues(){
     	
         for (int i=0; i<MAX_HISTORIC_VALS; i++){
@@ -238,24 +235,26 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     }
     
     
+    /*
+     * Handler for click events
+     * (non-Javadoc)
+     * @see android.view.View.OnClickListener#onClick(android.view.View)
+     */
 	@Override
 	public void onClick(View v) {
-		// TODO Auto-generated method stub
 	    switch (v.getId()){
+			//Start Background service
 	    	case R.id.startTest:
 	    		Log.i(TAG, "Start button pressed");
-	    		//Start Background service
             	errorView.setText("");
-            	
 	    		SigcommDemoAndroidService.setMainActivity(this, IP_ADDR, TCP_PORT);
 	    		mServiceIntent = new Intent(this, SigcommDemoAndroidService.class);
-	    		bindService (mServiceIntent, mConnection, Context.BIND_AUTO_CREATE);
-	    		
+	    		bindService (mServiceIntent, mConnection, Context.BIND_AUTO_CREATE);	    		
 	    		startTime = System.currentTimeMillis();
 	    		break;
+	    	//Stop background service
 	    	case R.id.stopTest:
 	    		Log.i(TAG, "Stop button pressed");
-	    		//Stop background service
 	    		restartValues();
 	    		try{
 	    			if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);		
@@ -272,14 +271,17 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    		}
 	    		this.finish();
 	    		break;
+	    	//Show RTT plot
 	    	case R.id.rtt:
 	    		currentPlot=PLOT_RTT;
 	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
 	    		break;
+	    	//Show JITTER plot
 	    	case R.id.jitter:
 	    		currentPlot=PLOT_JITTER;
 	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
 	    		break;
+	    	//Show Goodput (uplink/downlink) plot
 	    	case R.id.goodput:
 	    		currentPlot=PLOT_GOODPUT;
 	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
@@ -289,6 +291,9 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    }
 	}
 	
+	/*
+	 * Controls the background service collecting the measurements
+	 */
     private ServiceConnection mConnection = new ServiceConnection(){
     	public void onServiceConnected (ComponentName className, IBinder service){
     		SigcommDemoAndroidService mService = ((LocalBinder<SigcommDemoAndroidService>) service).getService();
@@ -298,21 +303,23 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     	}
     };
     
+    /*
+     * Handles updates from the background service
+     */
     private class DataUpdateReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+        	//Server not available. Stop!
             if (intent.getAction().equals(SHOW_ERROR)) {
             	Log.i(TAG, "Error received: ");
             	String message = intent.getStringExtra(ERROR_INTENT); 
             	errorView.setText("ERROR: "+message);
-            	//stop server
             	try{
             		SigcommDemoAndroidService.stopThread();
             	}
             	catch(Exception e){
             		Log.i(TAG, "Error: "+e.getMessage());
-            	}
-				//DESTROY SERVICE		
+            	}	
 	    		try{	    			
 	            	unbindService(mConnection);        			
 	    		}		
@@ -320,6 +327,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    			Log.i(TAG, "ERROR UNBINDING SERVICE: "+e.getMessage());
 	    		}
             }
+            //New data
             if (intent.getAction().equals(REFRESH_DATA)) {
             	int valRTT = intent.getIntExtra(REFRESH_RTT_INTENT, -1);
             	if (valRTT>-1){
@@ -331,8 +339,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
                 		maxValRttYAxis = (float)valRTT/1000.0f;
                 	}
             	}
-
-
             	int goodputUpstreamVal = intent.getIntExtra(REFRESH_GOODPUTUPSTREAM_INTENT, -1);
             	if (goodputUpstreamVal>-1){
                 	Log.i(TAG, "Received Goodput Upstream: "+goodputUpstreamVal);
@@ -345,7 +351,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
                 		maxValGoodputYAxis = (float)goodputUpstreamVal/1000.0f;
                 	}
             	}
-            	
             	int goodputDownstreamVal = intent.getIntExtra(REFRESH_GOODPUTDOWNSTREAM_INTENT, -1);
             	if (goodputDownstreamVal>-1){
                 	Log.i(TAG, "Received Goodput Downstream: "+goodputDownstreamVal);
@@ -366,21 +371,18 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
                 		maxValJitterYAxis = (float)jitterVal/1000.0f;
                 	}
             	}
-            	//plot (float [] timestamps, float [] values, float minX, float maxX, float minY, float maxY){
             	
+            	//Whenever new data arrives, update the active plot
             	switch(currentPlot){
 	            	case PLOT_RTT:
-	                    title.setText(RTT_LABEL);
-	                    
+	                    title.setText(RTT_LABEL);	                    
 	                    graph.setXAxisLabel("Elapsed Time (s)");
 	                    graph.setYAxisLabel("");
 	                    graph.setYLabels(yTicksLabelsRttDefault);
 	                    graph.setYLabelPositions(yTicksPosition);        
 	                    graph.setXLabels(xTicksLabelsTime);
-	                    graph.setXLabelPositions(xTicksPosGoodput);
-	                    
-	            		plotLatency(timestampRtt, arrayRtt, minXAxisLatency, maxXAxisLatency, 0.0f, maxValRttYAxis);
-	                	
+	                    graph.setXLabelPositions(xTicksPosGoodput);	                    
+	            		plotLatency(timestampRtt, arrayRtt, minXAxisLatency, maxXAxisLatency, 0.0f, maxValRttYAxis);	                	
 	            		break;
 	            	case PLOT_JITTER:
 	                    title.setText(JITTER_LABEL);	                    
@@ -390,8 +392,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	                    graph.setYLabelPositions(yTicksPosition);        
 	                    graph.setXLabels(xTicksLabelsTime);
 	                    graph.setXLabelPositions(xTicksPosGoodput);	                    
-	            		plotJitter(timestampJitter, arrayJitter, minXAxisJitter, maxXAxisJitter, 0.0f, maxValJitterYAxis);
-	                	
+	            		plotJitter(timestampJitter, arrayJitter, minXAxisJitter, maxXAxisJitter, 0.0f, maxValJitterYAxis);     	
 	            		break;
 	            	case PLOT_GOODPUT:
 	            		//Bi-dimensional (uplink-downlink)
@@ -402,18 +403,16 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	                    graph.setYLabelPositions(yTicksPosition);        
 	                    graph.setXLabels(xTicksLabelsTime);
 	                    graph.setXLabelPositions(xTicksPosGoodput);	                    
-	            		plot(timestampDownstreamBandwidth, arrayDownstreamBandwidth, timestampUpstreamBandwidth, arrayUpstreamBandwidth, minXAxisGoodput, maxXAxisGoodput, 0.0f, maxValGoodputYAxis);
-	                	
+	            		plot(timestampDownstreamBandwidth, arrayDownstreamBandwidth, timestampUpstreamBandwidth, arrayUpstreamBandwidth, minXAxisGoodput, maxXAxisGoodput, 0.0f, maxValGoodputYAxis);                	
 	            		break;
             	}
-            	//TOTO: Refresh plot, but only the adequate one
-            	//plotBandwidthPairs(timestampDownstreamBandwidth, arrayDownstreamBandwidth, timestampUpstreamBandwidth, arrayUpstreamBandwidth);
-            	//plotLatencySingle(timestampRtt, timestampRtt);
-            	//plotJitterSingle(timestampJitter, arrayJitter);
             }
         }
     }
    
+    /*
+     * Updates time series (x) for Goodput
+     */
     public float[] updateTimestampArrayGoodput (float [] array, float newval){
     	for (int i=0; i<array.length-1; i++){
     		array[i]= array[i+1];
@@ -431,9 +430,13 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         		minXAxisGoodput = array[0];
         	}    		
     	}
-    	return array;
-    	
+    	return array;    	
     }
+    
+
+    /*
+     * Updates time series (x) for Jitter
+     */
     public float[] updateTimestampJitterArray (float [] array, float newval){
     	for (int i=0; i<array.length-1; i++){
     		array[i]= array[i+1];
@@ -441,8 +444,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     	array[array.length-1]=newval;
     	if (newval>maxXAxisJitter){
     		maxXAxisJitter = newval;    		
-    	}
-    	
+    	}    	
     	if (newval>30.0f){
         	minXAxisJitter = newval-30.0f;
     	}
@@ -451,10 +453,13 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         		minXAxisJitter = array[0];
         	}    		
     	}
-    	return array;
-    	
+    	return array;    	
     }
     
+
+    /*
+     * Updates time series (x) for Latency
+     */
     public float[] updateTimestampLatencyArray (float [] array, float newval){
     	for (int i=0; i<array.length-1; i++){
     		array[i]= array[i+1];
@@ -462,8 +467,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     	array[array.length-1]=newval;
     	if (newval>maxXAxisLatency){
     		maxXAxisLatency = newval;    		
-    	}
-    	
+    	}    	
     	if (newval>30.0f){
         	minXAxisLatency = newval-30.0f;
     	}
@@ -472,11 +476,14 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         		minXAxisLatency = array[0];
         	}    		
     	}
-    	return array;
-    	
+    	return array;    	
     }
     
 
+    /*
+     * Updates time values (y) for a given variable
+     * whenever new data arrives
+     */
     public float [] updateHistoricValFloat (float [] array, float newval ){
     	for (int i=0; i<array.length-1; i++){
     		array[i]= array[i+1];
@@ -489,22 +496,19 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         return (float)(Math.floor(val * 100) / 100);
     }
 
+    /*
+     * Plots jitter
+     */
     public void plotJitter (float [] timestamps, float [] values, float minX, float maxX, float minY, float maxY){
 
     	float[][] data1 = {timestamps, values};
-    	
-    	//mJitterGraph.redraw();
-    	//mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
 
-    	
-        //Set x-axis values
         float midTime = (maxX-minX)/2.0f+minX;
         float mid = (float)Math.round(midTime*10)/10;
         float firstquarterTime = (float)Math.round(((midTime-minX)/2.0f+minX)*10)/10;
         float secondquarterTime = (float)Math.round(((maxX-midTime)/2.0f+midTime)*10)/10;
         float max = (float)Math.round(maxX*10)/10;
-        float min = (float)Math.round(minX*10)/10;
-        
+        float min = (float)Math.round(minX*10)/10;        
 
         float maxYVal = (float)Math.round(maxY*1.20f*10)/10;
         float midYVal = (float)Math.round(maxYVal*0.5f*10)/10;
@@ -522,21 +526,17 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         graph.setYLabels(yTicksLabelsJitter);
         graph.setYLabelPositions(yTicksPosJitter);
         
-
-        
         graph.setData(new float[][][]{data1}, minX,  timestamps[timestamps.length-1], minY, maxY);
-
         graph.redraw();
     }
     
+    /*
+     * Plots latency
+     */
     public void plotLatency (float [] timestamps, float [] values, float minX, float maxX, float minY, float maxY){
 
     	float[][] data1 = {timestamps, values};
-    	
-    	//mJitterGraph.redraw();
-    	//mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
 
-    	
         //Set x-axis values
         float midTime = (maxX-minX)/2.0f+minX;
         float mid = (float)Math.round(midTime*10)/10;
@@ -544,7 +544,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         float secondquarterTime = (float)Math.round(((maxX-midTime)/2.0f+midTime)*10)/10;
         float max = (float)Math.round(maxX*10)/10;
         float min = (float)Math.round(minX*10)/10;
-        
 
         float maxYVal = (float)Math.round(maxY*1.20f*10)/10;
         float midYVal = (float)Math.round(maxYVal*0.5f*10)/10;
@@ -562,19 +561,20 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         graph.setYLabels(yTicksLabelsLatency);
         graph.setYLabelPositions(yTicksPosLatency);
         
-
-        
         graph.setData(new float[][][]{data1}, minX,  timestamps[timestamps.length-1], minY, maxY);
 
         graph.redraw();
     }
 
+    /*
+     * Plots goodput (bi-dimensional)
+     */
     public void plot (float [] timestamps, float [] values, float[] timestamps2, float[] values2, float minX, float maxX, float minY, float maxY){
     	float[][] data1 = {timestamps, values};
         float[][] data2={timestamps2, values2};
         
-        
         //Set x-axis values
+        //Needs to get the minimum for the timestamp as the measurements are not sync-ed
         float midTime = (maxX-minX)/2.0f+minX;
         float mid = (float)Math.round(midTime*10)/10;
         float firstquarterTime = (float)Math.round(((midTime-minX)/2.0f+minX)*10)/10;
@@ -599,7 +599,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         graph.setYLabels(yTicksLabelsLatency);
         graph.setYLabelPositions(yTicksPosLatency);
         
-        
         graph.redraw();
 
         graph.setData(new float[][][]{data1}, minX,  Math.min(timestamps[timestamps.length-1],timestamps2[timestamps2.length-1]), minY, maxYVal);
@@ -607,8 +606,9 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 
     }
     
-    
-    
+    /*
+     * Aux method for debugging
+     */
     public void printVals(int [] array){
     	String arrayVals = "";
     	for (int i=0; i<array.length; i++){
@@ -617,6 +617,9 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 		Log.i(TAG, "Array Vals: "+arrayVals);
     }
     
+    /*
+     * Deprecated. Currently values are float
+     */
     public int [] updateHistoricValInt (int [] array, int newval ){
     	for (int i=0; i<array.length-1; i++){
     		array[i]= array[i+1];

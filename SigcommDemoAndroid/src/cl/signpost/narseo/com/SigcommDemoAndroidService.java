@@ -181,30 +181,6 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	}
 	
 	
-	/*
-	 * Test thread (periodically sends a new value)
-	 * (non-Javadoc)
-	 * @see java.lang.Runnable#run()
-	 *//*
-	public void run(){
-		int counter = 0;
-		while (testAlive){
-			try{
-				Thread.sleep(1000);
-				counter++;
-				Random r = new Random();
-				notifyActivity((r.nextInt()%1000)*1000, LATENCY_DOWNSTREAM_ID);
-				notifyActivity((r.nextInt()%1000)*1000, LATENCY_UPSTREAM_ID);
-				notifyActivity((r.nextInt()%20)*1000, GOODPUT_DOWNSTREAM_ID);
-				notifyActivity((r.nextInt()%20)*1000, GOODPUT_UPSTREAM_ID);
-			}
-			catch(Exception e){
-				Log.i(TAG, "ERROR: "+e.getMessage());
-			}
-		}
-	}*/
-	
-	
 	//Thread! 
 	//If it has to be improved, would be nice to use some event-based libraries
 	public void run (){
@@ -227,15 +203,14 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			if (DEBUG) Log.i(TAG, "Server line (string): "+in+" - Server UDP port (int): "+UDP_SERVER_PORT);
 			
 
-
-
 			//Starting UDP receiver and sender thread (non-blocking)
 		    SenderThread sender = new SenderThread(addr, UDP_SERVER_PORT);
 		    sender.start();
-		   // Thread receiver = new ReceiverThread();
-		   // receiver.start();
 		    
-			
+			/*
+			 * TCP Latency measurement is deprecated but still done.
+			 * The latency plotted is the RTT measured with UDP thread
+			 */
 			while (testAlive){
 				//Ping message
 				long startTime = System.currentTimeMillis();
@@ -273,8 +248,6 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				
 				//Wait for server latency
 				int serverLatencyInt = Integer.parseInt(inFromServer.readLine());
-				//notifyActivity (serverLatencyInt, LATENCY_DOWNSTREAM_ID);				
-				
 				
 				//GET UPSTREAM GOODPUT
 				long overallUpstream=0;
@@ -294,17 +267,6 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		catch(Exception e){
 			Log.i(TAG, "EXCEPTION OPENING CONNECTION: "+e.getMessage());
 			notifyErrorActivity("SERVER NOT AVAILABLE");
-			
-			/*new AlertDialog.Builder(this).setTitle("Error").setMessage("Server does not respond!").setPositiveButton("OK", null).show();*/  
-			
-			/*
-			Context context = getApplicationContext();
-			CharSequence text = "ERROR. Couldn't open connection with server";
-			int duration = Toast.LENGTH_SHORT;
-
-			Toast toast = Toast.makeText(context, text, duration);
-			toast.show();
-			*/
 		}
 		stopThread();
 		Log.i(TAG, "FINISHED!");
@@ -320,69 +282,39 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 
 	}
 	
-	
+	/*
+	 * UDP Test thread
+	 */
 	class SenderThread extends Thread {
-
 		  private InetAddress server;
-
-
-		 // private DatagramSocket socket = null;
 		  private boolean stopped = false;
-
 		  private int port;
 
 	      byte[] sendData = new byte[100];
 	      byte[] receiveData = new byte[100];
 
-		  public SenderThread(InetAddress address, int port) throws SocketException {
-			  	
+		  public SenderThread(InetAddress address, int port) throws SocketException {		  	
 			  	this.server = address;
 		    	this.port = port;
-		    	 //socket = new DatagramSocket();
 		    	Log.i(TAG, "UDP Sender sending to "+address.getHostName()+":"+port);
 		  }
 
-		  public void halt() {
-			  	this.stopped = true;
-		  }
-/*
-		  
-		  public DatagramSocket getSocket() {		    
-			  return this.socket;
-		  }
-*/
+
 		  public void run() {
 			Log.e(TAG, "Starting UDP Server Thread");
 			udpSeqNumber = 0;
 		      
 		    try {
 				DatagramSocket clientSocket = new DatagramSocket();
-		      //BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-		      
-				/*
-				 * - client -> server: id,0,client_timestamp1
-- server -> client: 0,server_timestamp1
-- client -> server: id,1,client_timestamp2
-- server -> client: 1,server_timestamp2
 
-then: clientRtt = client_timestamp2-client_timestamp1
-idem for server
-and jitter:
-(client_timestamp2-client_timestamp1)-(server_timestamp2-server_timestamp1)
-[30/07/2012 01:41:33] Narseo: this can be done every 1 sec
-[30/07/2012 01:42:26] Narseo: it's based on deltas so it should be fine
-				 */
 		      while (testAlive) {
 		    	  try{
 		    	  	//Info sent to server (hostname;timestamp;jitter) + -1 indicating start RTT test
 
 			        long t1 = System.currentTimeMillis();
 			        
-		    	  	//String p0 = devName+";"+0+";"+new DecimalFormat("#.###").format((float)t1/1000.0f)+";";
 		    	  	String p0 = devName+";"+0+";"+t1+";";
-		    	  	
-		    	  	//Log.i(TAG, "PO "+ p0);
-			        //Log.e(TAG, "Sending UDP: "+theLine);
+
 			        byte[] data = p0.getBytes();
 			        DatagramPacket dpSend = new DatagramPacket(data, data.length, server, port);
 			        clientSocket.send(dpSend);
@@ -392,47 +324,42 @@ and jitter:
 			        clientSocket.receive(dpReceive);
 			        long t2 = System.currentTimeMillis();
 			        String r1 = new String(dpReceive.getData(), 0, dpReceive.getLength());
-			        //Log.e(TAG, "Server response1: "+r1);		
-
 			        
 			        /*Send response to server*/
 			        long t3 = System.currentTimeMillis();			    
-			        //String p1 = devName+";"+1+";"+new DecimalFormat("#.###").format((float)t3/1000.0f)+";";
 			        String p1 = devName+";"+1+";"+t3+";";
-		    	  	
-			        //Log.i(TAG, "Send over udp: "+p1);
+
 			        data = p1.getBytes();
 			        dpSend = new DatagramPacket(data, data.length,server, port);			        
 			        clientSocket.send(dpSend);
 
-			        /*Wait for server response and client estimate RTT*/
+			        //Wait for final server response
 			        dpReceive = new DatagramPacket(receiveData, receiveData.length);			         
 			        clientSocket.receive(dpReceive);
+			        
+			        /*
+			         * Compute jitter and RTT
+			         */
 			        long t4 = System.currentTimeMillis();
 			        String r2 = new String(dpReceive.getData(), 0, dpReceive.getLength());
-			        //Log.e(TAG, "Server response2: "+r2);		
-			        //server;1;1343690067729;
 			        
-			        //Compute values!!! t1,t2,t3,t4, r1 and r2
 			        long rtt=((t4-t3)+(t2-t1))/2;
 			        String [] serverResp1 = r1.split(";");
-			        String [] serverResp2 = r2.split(";");
+			        String [] serverResp2 = r2.split(";");			        
 			        
 			        long servTimestamp1 = Long.parseLong(serverResp1[2]);
 			        long servTimestamp2 = Long.parseLong(serverResp2[2]);
 			        long deltaRemote = servTimestamp2-servTimestamp1;
 			        long deltaLocal = t3-t1;
-			        //Log.i(TAG, "R1: "+servTimestamp1+"; R2: "+servTimestamp2+"; DELTA: "+(servTimestamp2-servTimestamp1));
 			        
 			        long jitter = Math.abs(deltaLocal-deltaRemote);
 			        notifyActivity((int)rtt*1000, RTT_ID);
 			        notifyActivity((int)jitter*1000, JITTER_ID);
 			        
-			        System.out.println("RTT: "+rtt+"\tJitter: "+jitter);
-			        
+			        System.out.println("RTT: "+rtt+"\tJitter: "+jitter);			        
 			        long error = System.currentTimeMillis()-t1;
+			        
 			        //Sleep thread
-			        //Log.i(TAG, "Sleep error "+error);
 			        Thread.sleep(2000-error);
 			        
 			    }
@@ -447,7 +374,4 @@ and jitter:
 		    }
 		  }
 		}
-
-
-	
 }
