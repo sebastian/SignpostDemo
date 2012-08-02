@@ -37,15 +37,13 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public static final String REFRESH_DATA = "SIGNPOST_VALUE";
 	public static final String SHOW_ERROR = "ERROR";
 	public static final String ERROR_INTENT = "ERROR_MESSAGE";
-	public static final String REFRESH_LATENCYUPSTREAM_INTENT = "LATENCYUPSTREAM";
-	public static final String REFRESH_LATENCYDOWNSTREAM_INTENT = "LATENCYDOWNSTREAM";
+	public static final String REFRESH_RTT_INTENT = "LATENCYUPSTREAM";
 	public static final String REFRESH_JITTER_INTENT = "JITTER";
 	public static final String REFRESH_GOODPUTUPSTREAM_INTENT = "GOODPUTUPSTREAM";
 	public static final String REFRESH_GOODPUTDOWNSTREAM_INTENT = "GOODPUTDOWNSTREAM";
 	
 	
-	public static final int LATENCY_UPSTREAM_ID = 0;
-	public static final int LATENCY_DOWNSTREAM_ID = 1;
+	public static final int RTT_ID = 0;
 	public static final int GOODPUT_UPSTREAM_ID = 2;
 	public static final int GOODPUT_DOWNSTREAM_ID = 3;
 	public static final int JITTER_ID = 4;
@@ -160,11 +158,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			case GOODPUT_UPSTREAM_ID:
 				extraVal = REFRESH_GOODPUTUPSTREAM_INTENT;
 				break;
-			case LATENCY_UPSTREAM_ID:
-				extraVal = REFRESH_LATENCYUPSTREAM_INTENT;
-				break;
-			case LATENCY_DOWNSTREAM_ID:
-				extraVal = REFRESH_LATENCYDOWNSTREAM_INTENT;
+			case RTT_ID:
+				extraVal = REFRESH_RTT_INTENT;
 				break;
 			case JITTER_ID:
 				extraVal = REFRESH_JITTER_INTENT;
@@ -430,7 +425,7 @@ and jitter:
 			        //Log.i(TAG, "R1: "+servTimestamp1+"; R2: "+servTimestamp2+"; DELTA: "+(servTimestamp2-servTimestamp1));
 			        
 			        long jitter = Math.abs(deltaLocal-deltaRemote);
-			        notifyActivity((int)rtt*1000, LATENCY_DOWNSTREAM_ID);
+			        notifyActivity((int)rtt*1000, RTT_ID);
 			        notifyActivity((int)jitter*1000, JITTER_ID);
 			        
 			        System.out.println("RTT: "+rtt+"\tJitter: "+jitter);

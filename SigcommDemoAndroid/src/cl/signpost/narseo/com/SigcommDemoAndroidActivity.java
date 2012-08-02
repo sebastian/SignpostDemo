@@ -1,5 +1,6 @@
 package cl.signpost.narseo.com;
 
+import java.text.DecimalFormat;
 import java.util.Random;
 
 import com.google.gson.Gson;
@@ -40,27 +41,33 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	private PowerManager.WakeLock mWakeLock;
 	private static Button startButton = null;
 	private static Button stopButton = null;
+	private static Button rttButton = null;
+	private static Button jitterButton = null;
+	private static Button goodputButton = null;
 	private static TextView errorView = null;
+	private static TextView title = null;
+	private GraphView graph;
+	
 	private static Intent mServiceIntent;
 	private DataUpdateReceiver dataUpdateReceiver;
 
 
-	private GraphView mGoodputGraph;
-	private GraphView mLatencyGraph;
-	private GraphView mJitterGraph;
-	
+	//Used to inform which one is the current active plot
+	private static int currentPlot = 0;
+	private static final int PLOT_RTT = 0;
+	private static final int PLOT_JITTER = 1;
+	private static final int PLOT_GOODPUT = 2;
+
+	/*Used to identify the intents sent from the service*/
 	public static final String REFRESH_DATA = "SIGNPOST_VALUE";
 	public static final String SHOW_ERROR = "ERROR";
 	public static final String ERROR_INTENT = "ERROR_MESSAGE";
-	public static final String REFRESH_LATENCYUPSTREAM_INTENT = "LATENCYUPSTREAM";
-	public static final String REFRESH_LATENCYDOWNSTREAM_INTENT = "LATENCYDOWNSTREAM";
+	public static final String REFRESH_RTT_INTENT = "LATENCYUPSTREAM";
 	public static final String REFRESH_JITTER_INTENT = "JITTER";
 	public static final String REFRESH_GOODPUTUPSTREAM_INTENT = "GOODPUTUPSTREAM";
 	public static final String REFRESH_GOODPUTDOWNSTREAM_INTENT = "GOODPUTDOWNSTREAM";
-	
-
-	public static final int LATENCY_UPSTREAM_ID = 0;
-	public static final int LATENCY_DOWNSTREAM_ID = 1;
+	//Type of data
+	public static final int RTT_ID = 0;
 	public static final int GOODPUT_UPSTREAM_ID = 2;
 	public static final int GOODPUT_DOWNSTREAM_ID = 3;
 	public static final int JITTER_ID = 4;
@@ -76,32 +83,49 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	//public static final int [] IP_ADDR = {192, 168, 1, 80};
 	//public static final int [] IP_ADDR = {192, 168, 43, 7};
 	
-	private static final int MAX_HISTORIC_VALS = 40;
+
+	
+	
+	//Labels for plots
+	private static final String RTT_LABEL = "RTT (ms)";
+	private static final String JITTER_LABEL = "JITTER (ms)";
+	private static final String GOODPUT_LABEL = "Goodput (Mbps)";
+	
+	//Arrays for storing variables
+	private static final int MAX_HISTORIC_VALS = 40; //Memory
 	private static float [] arrayDownstreamBandwidth = new float[MAX_HISTORIC_VALS];
 	private static float [] arrayUpstreamBandwidth = new float[MAX_HISTORIC_VALS];
-	private static float [] arrayDownstreamLatency = new float[MAX_HISTORIC_VALS];
-	private static float [] arrayUpstreamLatency = new float[MAX_HISTORIC_VALS];
+	private static float [] arrayRtt = new float[MAX_HISTORIC_VALS];
 	private static float [] arrayJitter = new float[MAX_HISTORIC_VALS];
 	private static float [] timestampDownstreamBandwidth = new float[MAX_HISTORIC_VALS];
 	private static float [] timestampUpstreamBandwidth = new float[MAX_HISTORIC_VALS];
-	private static float [] timestampDownstreamLatency = new float[MAX_HISTORIC_VALS];
-	private static float [] timestampUpstreamLatency = new float[MAX_HISTORIC_VALS];
+	private static float [] timestampRtt = new float[MAX_HISTORIC_VALS];
 	private static float [] timestampJitter = new float[MAX_HISTORIC_VALS];
 	private static float maxTimestampBandwidth = 0.0f;
 	private static float minTimestampBandwidth = 0.0f;
 	
 	//Parameters about the configuration of the plots, ticks, axis, etc
-    private static String [] yTicksLabelsBandwidth = new String []{"0", "10", "20", "30", "40"};
-    private static float [] yTicksPosBandwidth = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
-    private static String [] yTicksLabelsLatency = new String []{"0", "0.1", "0.2", "0.3", "0.4"};
-    private static String [] yTicksLabelsJitter = new String []{"0", "0.1", "0.2", "0.3", "0.4", "0.5"};
-    private static float [] yTicksPosJitter = new float []{0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f};
+    private static float [] yTicksPosition = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+    
     //Default values
+    private static String [] yTicksLabelsGoodputDefault = new String []{"0", "10", "20", "30", "40"};
+    private static String [] yTicksLabelsRttDefault = new String []{"0", "50", "100", "150", "200"};
+    private static String [] yTicksLabelsJitterDefault = new String []{"0", "50", "100", "150", "200"};
     private static String [] xTicksLabelsTime = new String []{"0s"};
-    private static float [] xTicksPosBandwidth = new float []{1.0f};
+    private static float [] xTicksPosGoodput = new float []{1.0f};    
 	private static long startTime = 0;
-	private static float maxValBandwidth=0.0f;
-	private static float minValBandwidth=0.0f;
+	private static float maxXAxisJitter=0.0f;
+	private static float minXAxisJitter=0.0f;
+	private static float maxXAxisLatency=0.0f;
+	private static float minXAxisLatency=0.0f;
+	private static float maxXAxisGoodput=0.0f;
+	private static float minXAxisGoodput=0.0f;
+	private static float maxValGoodputYAxis=0.0f;
+	private static float minValGoodputYAxis=0.0f;
+	private static float maxValJitterYAxis=0.0f;
+	private static float minValJitterYAxis=0.0f;
+	private static float maxValRttYAxis=0.0f;
+	private static float minValRttYAxis=0.0f;
 	
     /** Called when the activity is first created. */
     @Override
@@ -110,54 +134,46 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         setContentView(R.layout.main2);
         
         errorView = (TextView) findViewById(R.id.editText1);
+        title = (TextView) findViewById(R.id.title);
         startButton =(Button) findViewById(R.id.startTest);        
         startButton.setOnClickListener(this);   
         stopButton =(Button) findViewById(R.id.stopTest);        
         stopButton.setOnClickListener(this);  
+        rttButton =(Button) findViewById(R.id.rtt);        
+        rttButton.setOnClickListener(this);  
+        jitterButton =(Button) findViewById(R.id.jitter);        
+        jitterButton.setOnClickListener(this); 
+        goodputButton =(Button) findViewById(R.id.goodput);        
+        goodputButton.setOnClickListener(this); 
         
+        
+
+
         for (int i=0; i<MAX_HISTORIC_VALS; i++){
         	arrayDownstreamBandwidth [i] = 0.0f;
         	arrayUpstreamBandwidth [i] = 0.0f;
         	arrayJitter[i]=0.0f;
         	timestampDownstreamBandwidth [i] = 0.0f;
         	timestampUpstreamBandwidth [i] = 0.0f;
-        	timestampDownstreamLatency [i] = 0.0f;
-        	timestampUpstreamLatency [i] = 0.0f;
+        	timestampRtt [i] = 0.0f;
         	timestampJitter [i] = 0.0f;
         }
+        title.setText("RTT (ms)");        
 
-        mGoodputGraph = (GraphView) findViewById(R.id.graphGoodput);
-        mLatencyGraph = (GraphView) findViewById (R.id.graphLatency);
-        mJitterGraph = (GraphView) findViewById (R.id.graphJitter);
+        graph = (GraphView) findViewById(R.id.graph);
         
-        mGoodputGraph.setYAxisLabel("Goodput (Mbps)");
-        //mGoodputGraph.setXAxisLabel("Elapsed Time (s)");
-        
-        mLatencyGraph.setYAxisLabel("RTT (s)");
-        //mLatencyGraph.setXAxisLabel("Elapsed Time (s)");
-        
-        mJitterGraph.setYAxisLabel("Jitter (s)");
-        mJitterGraph.setXAxisLabel("Elapsed Time (s)");
+        graph.setXAxisLabel("Elapsed Time (s)");
+        graph.setYAxisLabel("");
+        graph.setYLabels(yTicksLabelsRttDefault);
+        graph.setYLabelPositions(yTicksPosition);        
+        graph.setXLabels(xTicksLabelsTime);
+        graph.setXLabelPositions(xTicksPosGoodput);
         
         
-        
-        //Set the labels for the x and y axis. 
-        //X axis (time) only one initially for 0s in 0.5f
-        mGoodputGraph.setYLabels(yTicksLabelsBandwidth);
-        mGoodputGraph.setYLabelPositions(yTicksPosBandwidth);        
-        mGoodputGraph.setXLabels(xTicksLabelsTime);
-        mGoodputGraph.setXLabelPositions(xTicksPosBandwidth);
-        
-        //Same axis as jitter
-        mLatencyGraph.setYLabels(yTicksLabelsJitter);
-        mLatencyGraph.setYLabelPositions(yTicksPosJitter);    
-        mLatencyGraph.setXLabels(xTicksLabelsTime);
-        mLatencyGraph.setXLabelPositions(xTicksPosBandwidth);   
-        
-        mJitterGraph.setYLabels(yTicksLabelsJitter);
-        mJitterGraph.setYLabelPositions(yTicksPosJitter);    
-        mJitterGraph.setXLabels(xTicksLabelsTime);
-        mJitterGraph.setXLabelPositions(xTicksPosBandwidth);
+
+
+
+
         
         //Get lock manager
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -174,6 +190,40 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         Log.i(TAG, "Signpost Demo Activity. GUI created and resources allocated");
     }
     
+    public void restartValues(){
+    	
+        for (int i=0; i<MAX_HISTORIC_VALS; i++){
+        	arrayDownstreamBandwidth [i] = 0.0f;
+        	arrayUpstreamBandwidth [i] = 0.0f;
+        	arrayJitter[i]=0.0f;
+        	timestampDownstreamBandwidth [i] = 0.0f;
+        	timestampUpstreamBandwidth [i] = 0.0f;
+        	timestampRtt [i] = 0.0f;
+        	timestampJitter [i] = 0.0f;
+        }
+        title.setText("RTT (s)");        
+        graph.setXAxisLabel("Elapsed Time (s)");
+        graph.setYAxisLabel("");
+        graph.setYLabels(yTicksLabelsRttDefault);
+        graph.setYLabelPositions(yTicksPosition);        
+        graph.setXLabels(xTicksLabelsTime);
+        graph.setXLabelPositions(xTicksPosGoodput);
+        
+        
+    	startTime = 0;
+    	maxXAxisJitter=0.0f;
+    	minXAxisJitter=0.0f;
+    	maxXAxisLatency=0.0f;
+    	minXAxisLatency=0.0f;
+    	maxXAxisGoodput=0.0f;
+    	minXAxisGoodput=0.0f;
+    	maxValGoodputYAxis=0.0f;
+    	minValGoodputYAxis=0.0f;
+    	maxValJitterYAxis=0.0f;
+    	minValJitterYAxis=0.0f;
+    	maxValRttYAxis=0.0f;
+    	minValRttYAxis=0.0f;
+    }
     
     
     public void onDestroy(){
@@ -206,17 +256,14 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    	case R.id.stopTest:
 	    		Log.i(TAG, "Stop button pressed");
 	    		//Stop background service
-	    		
+	    		restartValues();
 	    		try{
-	    			if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);
-		    		
+	    			if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);		
 	    		}
 	    		catch(Exception e){
 	    			Log.e(TAG, "Exception Waiting for service to die: "+e.getMessage());
 	    		}
 	    		SigcommDemoAndroidService.stopThread();
-	        	
-	    		
 	    		try{
 	            	unbindService(mConnection);        			
 	    		}		
@@ -224,6 +271,18 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    			Log.i(TAG, "ERROR UNBINDING SERVICE: "+e.getMessage());
 	    		}
 	    		this.finish();
+	    		break;
+	    	case R.id.rtt:
+	    		currentPlot=PLOT_RTT;
+	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
+	    		break;
+	    	case R.id.jitter:
+	    		currentPlot=PLOT_JITTER;
+	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
+	    		break;
+	    	case R.id.goodput:
+	    		currentPlot=PLOT_GOODPUT;
+	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
 	    		break;
 	    	default:
 	    		Log.i(TAG, "ERROR");
@@ -254,8 +313,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
             		Log.i(TAG, "Error: "+e.getMessage());
             	}
 				//DESTROY SERVICE		
-	    		try{
-	    			
+	    		try{	    			
 	            	unbindService(mConnection);        			
 	    		}		
 	    		catch(Exception e){
@@ -263,69 +321,155 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    		}
             }
             if (intent.getAction().equals(REFRESH_DATA)) {
-            	int valueLatencyUpstream = intent.getIntExtra(REFRESH_LATENCYUPSTREAM_INTENT, -1);
-            	if (valueLatencyUpstream>-1){
-                	Log.i(TAG, "Received Latency Upstream: "+valueLatencyUpstream);
+            	int valRTT = intent.getIntExtra(REFRESH_RTT_INTENT, -1);
+            	if (valRTT>-1){
+                	Log.i(TAG, "Received Latency Upstream: "+valRTT);
                 	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
-                	updateTimestampArray(timestampUpstreamLatency,elapsedTime);                	
-                	arrayUpstreamLatency = updateHistoricValFloat(arrayUpstreamLatency, (float)valueLatencyUpstream/1000.0f); 
-                	//plotLatencyPairs(timestampDownstreamLatency, arrayDownstreamLatency, timestampUpstreamLatency, arrayUpstreamLatency);
+                	updateTimestampLatencyArray(timestampRtt,elapsedTime);                	
+                	arrayRtt = updateHistoricValFloat(arrayRtt, (float)valRTT/1000.0f);                 	
+                	if ((float)valRTT/1000.0f>maxValRttYAxis){
+                		maxValRttYAxis = (float)valRTT/1000.0f;
+                	}
             	}
 
-            	int valueLatencyDownstream = intent.getIntExtra(REFRESH_LATENCYDOWNSTREAM_INTENT, -1);
-            	if (valueLatencyDownstream>-1){
-                	Log.i(TAG, "Received Latency Downstream: "+valueLatencyDownstream);
-                	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
-                	updateTimestampArray(timestampDownstreamLatency,elapsedTime);                	
-                	arrayDownstreamLatency = updateHistoricValFloat(arrayDownstreamLatency, (float)valueLatencyDownstream/1000.0f); 
-                	//plotLatencyPairs(timestampDownstreamLatency, arrayDownstreamLatency, timestampUpstreamLatency, arrayUpstreamLatency);
-            	}
+
             	int goodputUpstreamVal = intent.getIntExtra(REFRESH_GOODPUTUPSTREAM_INTENT, -1);
             	if (goodputUpstreamVal>-1){
                 	Log.i(TAG, "Received Goodput Upstream: "+goodputUpstreamVal);
                 	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
-                	updateTimestampArray(timestampUpstreamBandwidth,elapsedTime);                	
+                	updateTimestampArrayGoodput(timestampUpstreamBandwidth,elapsedTime);                	
                 	arrayUpstreamBandwidth = updateHistoricValFloat(arrayUpstreamBandwidth, (float)goodputUpstreamVal/1000.0f); 
                 	//Everything updated at the same time, otherwise time 
                 	//intervals do not match and they might look ugly
-                	plotBandwidthPairs(timestampDownstreamBandwidth, arrayDownstreamBandwidth, timestampUpstreamBandwidth, arrayUpstreamBandwidth);
-                	plotLatencySingle(timestampDownstreamLatency, arrayDownstreamLatency);
-                	plotJitterSingle(timestampJitter, arrayJitter);
+                	if ((float)goodputUpstreamVal/1000.0f>maxValGoodputYAxis){
+                		maxValGoodputYAxis = (float)goodputUpstreamVal/1000.0f;
+                	}
             	}
             	
             	int goodputDownstreamVal = intent.getIntExtra(REFRESH_GOODPUTDOWNSTREAM_INTENT, -1);
             	if (goodputDownstreamVal>-1){
                 	Log.i(TAG, "Received Goodput Downstream: "+goodputDownstreamVal);
                 	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
-                	updateTimestampArray(timestampDownstreamBandwidth,elapsedTime);                	
+                	updateTimestampArrayGoodput(timestampDownstreamBandwidth,elapsedTime);                	
                 	arrayDownstreamBandwidth = updateHistoricValFloat(arrayDownstreamBandwidth, (float)goodputDownstreamVal/1000.0f); 
+                	if ((float)goodputDownstreamVal/1000.0f>maxValGoodputYAxis){
+                		maxValGoodputYAxis = (float)goodputDownstreamVal/1000.0f;
+                	}
             	}
             	int jitterVal = intent.getIntExtra(REFRESH_JITTER_INTENT, -1);
             	if (jitterVal>-1){
                 	Log.i(TAG, "Received Jitter: "+jitterVal);
                 	float elapsedTime = (float)(System.currentTimeMillis()-startTime)/1000.0f;
-                	updateTimestampArray(timestampJitter,elapsedTime);                	
+                	updateTimestampJitterArray(timestampJitter,elapsedTime);                	
                 	arrayJitter = updateHistoricValFloat(arrayJitter, (float)jitterVal/1000.0f); 
+                	if ((float)jitterVal/1000.0f>maxValJitterYAxis){
+                		maxValJitterYAxis = (float)jitterVal/1000.0f;
+                	}
             	}
+            	//plot (float [] timestamps, float [] values, float minX, float maxX, float minY, float maxY){
+            	
+            	switch(currentPlot){
+	            	case PLOT_RTT:
+	                    title.setText(RTT_LABEL);
+	                    
+	                    graph.setXAxisLabel("Elapsed Time (s)");
+	                    graph.setYAxisLabel("");
+	                    graph.setYLabels(yTicksLabelsRttDefault);
+	                    graph.setYLabelPositions(yTicksPosition);        
+	                    graph.setXLabels(xTicksLabelsTime);
+	                    graph.setXLabelPositions(xTicksPosGoodput);
+	                    
+	            		plotLatency(timestampRtt, arrayRtt, minXAxisLatency, maxXAxisLatency, 0.0f, maxValRttYAxis);
+	                	
+	            		break;
+	            	case PLOT_JITTER:
+	                    title.setText(JITTER_LABEL);	                    
+	                    graph.setXAxisLabel("Elapsed Time (s)");
+	                    graph.setYAxisLabel("");
+	                    graph.setYLabels(yTicksLabelsJitterDefault);
+	                    graph.setYLabelPositions(yTicksPosition);        
+	                    graph.setXLabels(xTicksLabelsTime);
+	                    graph.setXLabelPositions(xTicksPosGoodput);	                    
+	            		plotJitter(timestampJitter, arrayJitter, minXAxisJitter, maxXAxisJitter, 0.0f, maxValJitterYAxis);
+	                	
+	            		break;
+	            	case PLOT_GOODPUT:
+	            		//Bi-dimensional (uplink-downlink)
+	                    title.setText(GOODPUT_LABEL);	                    
+	                    graph.setXAxisLabel("Elapsed Time (s)");
+	                    graph.setYAxisLabel("");
+	                    graph.setYLabels(yTicksLabelsGoodputDefault);
+	                    graph.setYLabelPositions(yTicksPosition);        
+	                    graph.setXLabels(xTicksLabelsTime);
+	                    graph.setXLabelPositions(xTicksPosGoodput);	                    
+	            		plot(timestampDownstreamBandwidth, arrayDownstreamBandwidth, timestampUpstreamBandwidth, arrayUpstreamBandwidth, minXAxisGoodput, maxXAxisGoodput, 0.0f, maxValGoodputYAxis);
+	                	
+	            		break;
+            	}
+            	//TOTO: Refresh plot, but only the adequate one
+            	//plotBandwidthPairs(timestampDownstreamBandwidth, arrayDownstreamBandwidth, timestampUpstreamBandwidth, arrayUpstreamBandwidth);
+            	//plotLatencySingle(timestampRtt, timestampRtt);
+            	//plotJitterSingle(timestampJitter, arrayJitter);
             }
         }
     }
-    
-    public float[] updateTimestampArray (float [] array, float newval){
+   
+    public float[] updateTimestampArrayGoodput (float [] array, float newval){
     	for (int i=0; i<array.length-1; i++){
     		array[i]= array[i+1];
     	}
     	array[array.length-1]=newval;
-    	if (newval>maxValBandwidth){
-        	maxValBandwidth = newval;    		
+    	if (newval>maxXAxisGoodput){
+    		maxXAxisGoodput = newval;    		
     	}
     	
     	if (newval>30.0f){
-        	minValBandwidth = newval-30.0f;
+        	minXAxisGoodput = newval-30.0f;
     	}
     	else{
-        	if (array[0]>minValBandwidth){
-            	minValBandwidth = array[0];
+        	if (array[0]>minXAxisGoodput){
+        		minXAxisGoodput = array[0];
+        	}    		
+    	}
+    	return array;
+    	
+    }
+    public float[] updateTimestampJitterArray (float [] array, float newval){
+    	for (int i=0; i<array.length-1; i++){
+    		array[i]= array[i+1];
+    	}
+    	array[array.length-1]=newval;
+    	if (newval>maxXAxisJitter){
+    		maxXAxisJitter = newval;    		
+    	}
+    	
+    	if (newval>30.0f){
+        	minXAxisJitter = newval-30.0f;
+    	}
+    	else{
+        	if (array[0]>minXAxisJitter){
+        		minXAxisJitter = array[0];
+        	}    		
+    	}
+    	return array;
+    	
+    }
+    
+    public float[] updateTimestampLatencyArray (float [] array, float newval){
+    	for (int i=0; i<array.length-1; i++){
+    		array[i]= array[i+1];
+    	}
+    	array[array.length-1]=newval;
+    	if (newval>maxXAxisLatency){
+    		maxXAxisLatency = newval;    		
+    	}
+    	
+    	if (newval>30.0f){
+        	minXAxisLatency = newval-30.0f;
+    	}
+    	else{
+        	if (array[0]>minXAxisLatency){
+        		minXAxisLatency = array[0];
         	}    		
     	}
     	return array;
@@ -341,101 +485,128 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     	return array;
     }
     
+    public float roundFloat (float val){
+        return (float)(Math.floor(val * 100) / 100);
+    }
 
-    public void plotJitterSingle (float [] timestampsDownstream, float [] arrayLatencyDownstream){
-    	mJitterGraph.redraw();        
+    public void plotJitter (float [] timestamps, float [] values, float minX, float maxX, float minY, float maxY){
 
-        float[][] data1 = {timestampsDownstream, arrayLatencyDownstream};
-        
-        mJitterGraph.setData(new float[][][]{data1}, minValBandwidth,  timestampsDownstream[timestampsDownstream.length-1], 0, 1000);
-        //mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
+    	float[][] data1 = {timestamps, values};
+    	
+    	//mJitterGraph.redraw();
+    	//mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
 
-        float midTime = (maxValBandwidth-minValBandwidth)/2.0f+minValBandwidth;
+    	
+        //Set x-axis values
+        float midTime = (maxX-minX)/2.0f+minX;
         float mid = (float)Math.round(midTime*10)/10;
-        float firstquarterTime = (float)Math.round(((midTime-minValBandwidth)/2.0f+minValBandwidth)*10)/10;
-        float secondquarterTime = (float)Math.round(((maxValBandwidth-midTime)/2.0f+midTime)*10)/10;
-        float max = (float)Math.round(maxValBandwidth*10)/10;
-        float min = (float)Math.round(minValBandwidth*10)/10;
+        float firstquarterTime = (float)Math.round(((midTime-minX)/2.0f+minX)*10)/10;
+        float secondquarterTime = (float)Math.round(((maxX-midTime)/2.0f+midTime)*10)/10;
+        float max = (float)Math.round(maxX*10)/10;
+        float min = (float)Math.round(minX*10)/10;
+        
+
+        float maxYVal = (float)Math.round(maxY*1.20f*10)/10;
+        float midYVal = (float)Math.round(maxYVal*0.5f*10)/10;
+        float firstquarterYVal = (float)Math.round(maxYVal*0.25f*10)/10;
+        float secondquarterYVal = (float)Math.round(maxYVal*0.75f*10)/10;
+        
+        String [] xTicksLabelsJitter = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
+        float [] xTicksPosJitter = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        String [] yTicksLabelsJitter = new String []{String.valueOf(0.0f), String.valueOf(firstquarterYVal), String.valueOf(midYVal), String.valueOf(secondquarterYVal), String.valueOf(maxYVal)};
+        float [] yTicksPosJitter = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        graph.setXLabels(xTicksLabelsJitter);
+        graph.setXLabelPositions(xTicksPosJitter);
+        graph.setYLabels(yTicksLabelsJitter);
+        graph.setYLabelPositions(yTicksPosJitter);
+        
+
+        
+        graph.setData(new float[][][]{data1}, minX,  timestamps[timestamps.length-1], minY, maxY);
+
+        graph.redraw();
+    }
+    
+    public void plotLatency (float [] timestamps, float [] values, float minX, float maxX, float minY, float maxY){
+
+    	float[][] data1 = {timestamps, values};
+    	
+    	//mJitterGraph.redraw();
+    	//mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
+
+    	
+        //Set x-axis values
+        float midTime = (maxX-minX)/2.0f+minX;
+        float mid = (float)Math.round(midTime*10)/10;
+        float firstquarterTime = (float)Math.round(((midTime-minX)/2.0f+minX)*10)/10;
+        float secondquarterTime = (float)Math.round(((maxX-midTime)/2.0f+midTime)*10)/10;
+        float max = (float)Math.round(maxX*10)/10;
+        float min = (float)Math.round(minX*10)/10;
+        
+
+        float maxYVal = (float)Math.round(maxY*1.20f*10)/10;
+        float midYVal = (float)Math.round(maxYVal*0.5f*10)/10;
+        float firstquarterYVal = (float)Math.round(maxYVal*0.25f*10)/10;
+        float secondquarterYVal = (float)Math.round(maxYVal*0.75f*10)/10;
         
         String [] xTicksLabelsLatency = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
         float [] xTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
 
-        mJitterGraph.setXLabels(xTicksLabelsLatency);
-        mJitterGraph.setXLabelPositions(xTicksPosLatency);
-    }
-    
-    public void plotLatencySingle (float [] timestampsDownstream, float [] arrayLatencyDownstream){
-    	mLatencyGraph.redraw();        
+        String [] yTicksLabelsLatency = new String []{String.valueOf(0.0f), String.valueOf(firstquarterYVal), String.valueOf(midYVal), String.valueOf(secondquarterYVal), String.valueOf(maxYVal)};
+        float [] yTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
 
-        float[][] data1 = {timestampsDownstream, arrayLatencyDownstream};
+        graph.setXLabels(xTicksLabelsLatency);
+        graph.setXLabelPositions(xTicksPosLatency);
+        graph.setYLabels(yTicksLabelsLatency);
+        graph.setYLabelPositions(yTicksPosLatency);
         
-        mLatencyGraph.setData(new float[][][]{data1}, minValBandwidth,  timestampsDownstream[timestampsDownstream.length-1], 0, 1000);
-        //mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
 
-        float midTime = (maxValBandwidth-minValBandwidth)/2.0f+minValBandwidth;
+        
+        graph.setData(new float[][][]{data1}, minX,  timestamps[timestamps.length-1], minY, maxY);
+
+        graph.redraw();
+    }
+
+    public void plot (float [] timestamps, float [] values, float[] timestamps2, float[] values2, float minX, float maxX, float minY, float maxY){
+    	float[][] data1 = {timestamps, values};
+        float[][] data2={timestamps2, values2};
+        
+        
+        //Set x-axis values
+        float midTime = (maxX-minX)/2.0f+minX;
         float mid = (float)Math.round(midTime*10)/10;
-        float firstquarterTime = (float)Math.round(((midTime-minValBandwidth)/2.0f+minValBandwidth)*10)/10;
-        float secondquarterTime = (float)Math.round(((maxValBandwidth-midTime)/2.0f+midTime)*10)/10;
-        float max = (float)Math.round(maxValBandwidth*10)/10;
-        float min = (float)Math.round(minValBandwidth*10)/10;
+        float firstquarterTime = (float)Math.round(((midTime-minX)/2.0f+minX)*10)/10;
+        float secondquarterTime = (float)Math.round(((maxX-midTime)/2.0f+midTime)*10)/10;
+        float max = (float)Math.round(maxX*10)/10;
+        float min = (float)Math.round(minX*10)/10;
+        
+
+        float maxYVal = (float)Math.round(maxY*1.2f*10)/10;
+        float midYVal = (float)Math.round(maxYVal*0.5f*10)/10;
+        float firstquarterYVal = (float)Math.round(maxYVal*0.25f*10)/10;
+        float secondquarterYVal = (float)Math.round(maxYVal*0.75f*10)/10;
         
         String [] xTicksLabelsLatency = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
         float [] xTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
 
-        mLatencyGraph.setXLabels(xTicksLabelsLatency);
-        mLatencyGraph.setXLabelPositions(xTicksPosLatency);
+        String [] yTicksLabelsLatency = new String []{String.valueOf(0.0f), String.valueOf(firstquarterYVal), String.valueOf(midYVal), String.valueOf(secondquarterYVal), String.valueOf(maxYVal)};
+        float [] yTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        graph.setXLabels(xTicksLabelsLatency);
+        graph.setXLabelPositions(xTicksPosLatency);
+        graph.setYLabels(yTicksLabelsLatency);
+        graph.setYLabelPositions(yTicksPosLatency);
+        
+        
+        graph.redraw();
+
+        graph.setData(new float[][][]{data1}, minX,  Math.min(timestamps[timestamps.length-1],timestamps2[timestamps2.length-1]), minY, maxYVal);
+        graph.addData(data2, minX, Math.min(timestamps[timestamps.length-1], timestamps2[timestamps2.length-1]), minY,maxYVal);
+
     }
     
-    
-    public void plotLatencyPairs (float [] timestampsDownstream, float [] arrayLatencyDownstream, float[] timestampsUpstream, float[] arrayLatencyUpstream){
-    	mLatencyGraph.redraw();        
-
-        float[][] data1 = {timestampsDownstream, arrayLatencyDownstream};
-        float[][] data2={timestampsUpstream, arrayLatencyUpstream};
-        
-        mLatencyGraph.setData(new float[][][]{data1}, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
-        mLatencyGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 1000);
-
-        float midTime = (maxValBandwidth-minValBandwidth)/2.0f+minValBandwidth;
-        float mid = (float)Math.round(midTime*10)/10;
-        float firstquarterTime = (float)Math.round(((midTime-minValBandwidth)/2.0f+minValBandwidth)*10)/10;
-        float secondquarterTime = (float)Math.round(((maxValBandwidth-midTime)/2.0f+midTime)*10)/10;
-        float max = (float)Math.round(maxValBandwidth*10)/10;
-        float min = (float)Math.round(minValBandwidth*10)/10;
-        
-        String [] xTicksLabelsLatency = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
-        float [] xTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
-
-        mLatencyGraph.setXLabels(xTicksLabelsLatency);
-        mLatencyGraph.setXLabelPositions(xTicksPosLatency);
-    }
-    
-    public void plotBandwidthPairs (float [] timestampsDownstream, float [] arrayBandwidthDownstream, float[] timestampsUpstream, float[] arrayBandwidthUpstream){
-
-    	// The first dataset must be inputted into the graph using setData to replace the placeholder data already there
-        //mGraph.addData(data1, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
-        mGoodputGraph.redraw();
-        
-
-        float[][] data1 = {timestampsDownstream, arrayBandwidthDownstream};
-        float[][] data2={timestampsUpstream, arrayBandwidthUpstream};
-        
-        mGoodputGraph.setData(new float[][][]{data1}, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 20);
-        mGoodputGraph.addData(data2, minValBandwidth, Math.min(timestampsUpstream[timestampsUpstream.length-1], timestampsDownstream[timestampsDownstream.length-1]), 0, 20);
-
-        float midTime = (maxValBandwidth-minValBandwidth)/2.0f+minValBandwidth;
-        float mid = (float)Math.round(midTime*10)/10;
-        float firstquarterTime = (float)Math.round(((midTime-minValBandwidth)/2.0f+minValBandwidth)*10)/10;
-        float secondquarterTime = (float)Math.round(((maxValBandwidth-midTime)/2.0f+midTime)*10)/10;
-        float max = (float)Math.round(maxValBandwidth*10)/10;
-        float min = (float)Math.round(minValBandwidth*10)/10;
-        
-        String [] xTicksLabelsBandwidth = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
-        float [] xTicksPosBandwidth = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
-
-        mGoodputGraph.setXLabels(xTicksLabelsBandwidth);
-        mGoodputGraph.setXLabelPositions(xTicksPosBandwidth);
-    }
     
     
     public void printVals(int [] array){
