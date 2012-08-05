@@ -190,8 +190,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			//Connects to server
 			int UDP_SERVER_PORT = -1;	
 			Socket clientSocket = new Socket(); 
-			byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
-			InetAddress addr = InetAddress.getByAddress(ipAddr);
+			//byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
+			//InetAddress addr = InetAddress.getByAddress(ipAddr);
 			String serverUrl = devName.split(".")[0]+"."+SIGNPOST_SERVER_DOMAIN;
 			
 			InetSocketAddress isockAddress = new InetSocketAddress(serverUrl, TCP_PORT);
@@ -209,7 +209,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			
 
 			//Starting UDP receiver and sender thread (non-blocking)
-		    SenderThread sender = new SenderThread(addr, UDP_SERVER_PORT);
+		    SenderThread sender = new SenderThread(isockAddress.getAddress(), UDP_SERVER_PORT);
 		    sender.start();
 		    
 			/*
