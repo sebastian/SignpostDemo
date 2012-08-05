@@ -48,6 +48,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public static final int GOODPUT_DOWNSTREAM_ID = 3;
 	public static final int JITTER_ID = 4;
 	
+	public static final String SIGNPOST_SERVER_DOMAIN = "home.d1.signpo.st";
+	
 	public static long now = 0;
 	public static long prev = 0;
 	
@@ -190,8 +192,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			Socket clientSocket = new Socket(); 
 			byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
 			InetAddress addr = InetAddress.getByAddress(ipAddr);
-		    InetSocketAddress isockAddress = new InetSocketAddress(addr, TCP_PORT);
-		    clientSocket.connect(isockAddress);	
+			String serverUrl = devName.split(".")[0]+"."+SIGNPOST_SERVER_DOMAIN;
+			
+			InetSocketAddress isockAddress = new InetSocketAddress(serverUrl, TCP_PORT);
+			
+			clientSocket.connect(isockAddress);	
 		    //Handshake is blocking!
 			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
