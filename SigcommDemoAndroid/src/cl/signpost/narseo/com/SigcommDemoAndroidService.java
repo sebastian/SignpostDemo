@@ -65,7 +65,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	//Default values
 	//public static int [] SERVER = {192, 168, 1, 1};
 
-	public static int [] SERVER = {10, 20, 1, 118};
+	//public static int [] SERVER = {10, 20, 1, 118};
 	public static int TCP_PORT = 7777;
 	public static int UDP_LOCAL_PORT = 5522;
 	
@@ -77,6 +77,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	 * Configures parameters and links to main activity
 	 */
 	public static void setName(String dnsName){
+		//Also used to identify server name
 		devName = dnsName;
 	}
 
@@ -84,11 +85,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	/*
 	 * Configures parameters and links to main activity
 	 */
-	public static void setMainActivity(SigcommDemoAndroidActivity activity, int [] server, int tcpPort){
+	public static void setMainActivity(SigcommDemoAndroidActivity activity, /*int [] server, */ int tcpPort){
 		Log.e(TAG, "Activity added. Task ID: "+activity.getTaskId());
 		MAIN_ACTIVITY=activity;
 		testAlive = true;
-		SERVER = server;
+		//SERVER = server;
 		TCP_PORT = tcpPort;
 	}
 

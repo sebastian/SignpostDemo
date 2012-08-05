@@ -80,7 +80,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	public static final int TCP_PORT = 7777;
 	
 	//TODO: To be changed for a domain
-	public static final int [] IP_ADDR = {192, 168, 1, 94};
+	//public static final int [] IP_ADDR = {192, 168, 1, 94};
 
 
 	
@@ -247,7 +247,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    	case R.id.startTest:
 	    		Log.i(TAG, "Start button pressed");
             	errorView.setText("");
-	    		SigcommDemoAndroidService.setMainActivity(this, IP_ADDR, TCP_PORT);
+	    		SigcommDemoAndroidService.setMainActivity(this, TCP_PORT);
 	    		mServiceIntent = new Intent(this, SigcommDemoAndroidService.class);
 	    		bindService (mServiceIntent, mConnection, Context.BIND_AUTO_CREATE);	    		
 	    		startTime = System.currentTimeMillis();
