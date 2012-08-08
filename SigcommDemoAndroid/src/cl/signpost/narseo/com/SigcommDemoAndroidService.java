@@ -62,6 +62,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	//Default DevName
 	public static String devName = "Android";
 	
+
+	public static InetAddress address = null;
+	
 	//Default values
 	//public static int [] SERVER = {192, 168, 1, 1};
 
@@ -194,9 +197,12 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			//byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
 			//InetAddress addr = InetAddress.getByAddress(ipAddr);
 			String serverUrl = devName.split(".")[0]+"."+SIGNPOST_SERVER_DOMAIN;
-			
-			InetSocketAddress isockAddress = new InetSocketAddress(serverUrl, TCP_PORT);
-			
+			InetSocketAddress isockAddress = null;
+			address = InetAddress.getByName(serverUrl);
+			isockAddress = new InetSocketAddress(address, TCP_PORT);	
+
+			Log.i(TAG, "Name for: "+address.getHostAddress());
+
 			clientSocket.connect(isockAddress);	
 		    //Handshake is blocking!
 			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
@@ -210,7 +216,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			
 
 			//Starting UDP receiver and sender thread (non-blocking)
-		    SenderThread sender = new SenderThread(isockAddress.getAddress(), UDP_SERVER_PORT);
+		    SenderThread sender = new SenderThread(address, UDP_SERVER_PORT);
 		    sender.start();
 		    
 			/*
