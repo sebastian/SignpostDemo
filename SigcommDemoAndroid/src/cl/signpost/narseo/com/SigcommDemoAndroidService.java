@@ -196,12 +196,22 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			Socket clientSocket = new Socket(); 
 			//byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
 			//InetAddress addr = InetAddress.getByAddress(ipAddr);
-			String serverUrl = devName.split(".")[0]+"."+SIGNPOST_SERVER_DOMAIN;
+			Log.i(TAG, "Dev name: "+devName);
+			String serverUrl = "";
+			try{
+				String [] splitName = devName.split("\\.");
+				serverUrl= splitName[0]+"."+SIGNPOST_SERVER_DOMAIN;
+			}
+			catch(Exception e){
+				Log.e(TAG, "EXCEPTION: "+e.getMessage());
+			}
+			Log.i(TAG, "Server URL: "+serverUrl);
 			InetSocketAddress isockAddress = null;
 			address = InetAddress.getByName(serverUrl);
 			isockAddress = new InetSocketAddress(address, TCP_PORT);	
 
 			Log.i(TAG, "Name for: "+address.getHostAddress());
+
 
 			clientSocket.connect(isockAddress);	
 		    //Handshake is blocking!
