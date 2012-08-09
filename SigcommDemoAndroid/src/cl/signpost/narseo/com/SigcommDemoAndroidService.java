@@ -192,6 +192,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public void run (){
 		try{
 			//Connects to server
+			long startTest = System.currentTimeMillis();
 			int UDP_SERVER_PORT = -1;	
 			Socket clientSocket = new Socket(); 
 			//byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
@@ -281,7 +282,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				int upstreamGoodputInt = Integer.parseInt(inFromServer.readLine())/1000;
 				notifyActivity(upstreamGoodputInt, GOODPUT_UPSTREAM_ID);
 				
-				if (DEBUG) Log.i(TAG, "Upstream test finished. " + overallUpstream+" bytes sent");				
+				if (DEBUG) Log.i(TAG, "Upstream test finished. " + overallUpstream+" bytes sent");	
+				if ((System.currentTimeMillis()-startTest) > 120*1000){
+					testAlive = false;
+				}
 			}
 			
 			clientSocket.close();
