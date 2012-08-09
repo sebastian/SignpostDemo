@@ -244,7 +244,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				//Listen for num bytes from server and estimate latency.
 				in = inFromServer.readLine();
 				int numBytes = Integer.parseInt(in);				
-				int latency = (int)(System.currentTimeMillis()-startTime)*1000/2;							
+				long latency = (System.currentTimeMillis()-startTime)*1000/2;							
 				//notifyActivity(latency, LATENCY_UPSTREAM_ID);
 				
 				Log.i(TAG, "Packet Length (string): "+in+" - Packet Length (int): "+numBytes);
@@ -263,8 +263,12 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
                 {
                 	overall += inFromServer.read(data, 0, 1024);                	
                 }
-                int downloadTime = (int)(System.currentTimeMillis() - startDownloadTime)-latency/1000*2;
-                int goodputDownstream = 8*numBytes/downloadTime; //in kbps
+                long downloadTime = (System.currentTimeMillis() - startDownloadTime)-latency/1000*2;
+                Log.i(TAG, "Download time: "+downloadTime);
+                int goodputDownstream = 8*numBytes/(int)downloadTime; //in kbps
+                if (goodputDownstream<0){
+                	Log.e(TAG, "ERROR!!! GOODPUT<0. Bits: "+8*numBytes+" - Download Time (int) "+(int)downloadTime);
+                }
                 Log.e(TAG, "DOWNSTREAM (kbps): "+goodputDownstream);
                 notifyActivity(goodputDownstream, GOODPUT_DOWNSTREAM_ID);
 				outToServer.writeBytes(goodputDownstream*1000+ "\r\n"); //Sent to server as bps
@@ -382,7 +386,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			        notifyActivity((int)rtt*1000, RTT_ID);
 			        notifyActivity((int)jitter*1000, JITTER_ID);
 			        
-			        System.out.println("RTT: "+rtt+"\tJitter: "+jitter);			        
+			        Log.e(TAG, "UDP Measurement. RTT: "+rtt+"\tJitter: "+jitter);			        
 			        long error = System.currentTimeMillis()-t1;
 			        
 			        //Sleep thread

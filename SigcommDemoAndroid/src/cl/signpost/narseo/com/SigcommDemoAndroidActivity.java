@@ -521,6 +521,10 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         String [] yTicksLabelsJitter = new String []{String.valueOf(0.0f), String.valueOf(firstquarterYVal), String.valueOf(midYVal), String.valueOf(secondquarterYVal), String.valueOf(maxYVal)};
         float [] yTicksPosJitter = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
 
+        /* 
+         * THIS IS WHERE SMOOTHING CAN BE DONE. SUBSTITUTE ORIGINAL ARRAY
+         * BY AN SMOOTHED ONE
+         */
         graph.setXLabels(xTicksLabelsJitter);
         graph.setXLabelPositions(xTicksPosJitter);
         graph.setYLabels(yTicksLabelsJitter);
@@ -556,6 +560,11 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         String [] yTicksLabelsLatency = new String []{String.valueOf(0.0f), String.valueOf(firstquarterYVal), String.valueOf(midYVal), String.valueOf(secondquarterYVal), String.valueOf(maxYVal)};
         float [] yTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
 
+
+        /* 
+         * THIS IS WHERE SMOOTHING CAN BE DONE. SUBSTITUTE ORIGINAL ARRAY
+         * BY AN SMOOTHED ONE
+         */
         graph.setXLabels(xTicksLabelsLatency);
         graph.setXLabelPositions(xTicksPosLatency);
         graph.setYLabels(yTicksLabelsLatency);
@@ -594,6 +603,10 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         String [] yTicksLabelsLatency = new String []{String.valueOf(0.0f), String.valueOf(firstquarterYVal), String.valueOf(midYVal), String.valueOf(secondquarterYVal), String.valueOf(maxYVal)};
         float [] yTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
 
+        /* 
+         * THIS IS WHERE SMOOTHING CAN BE DONE. SUBSTITUTE ORIGINAL ARRAY
+         * BY AN SMOOTHED ONE
+         */
         graph.setXLabels(xTicksLabelsLatency);
         graph.setXLabelPositions(xTicksPosLatency);
         graph.setYLabels(yTicksLabelsLatency);
