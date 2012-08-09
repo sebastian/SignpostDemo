@@ -14,13 +14,13 @@
 {
   "client":"client4",
   "server":"home", 
-  "type":"iodine"
+  "type":"direct"
 },
 
 {
   "client":"client69",
   "server":"home", 
-  "type":"iodine"
+  "type":"ssh"
 }
 
 ]

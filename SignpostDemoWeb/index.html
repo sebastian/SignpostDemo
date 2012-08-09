@@ -16,6 +16,26 @@
     <h2 id="title">
       Signpost network edge
     </h2>
+    <div id="legend">
+      <svg width="300px" height="150px">
+        <g>
+        <path class="tunnel-direct" d="M0,10L100,10"></path>
+        <text transform="translate(115, 15)" >Direct connection</text>
+        <path class="tunnel-openvpn" d="M0,30L100,30">OpenVPN</path>
+        <text transform="translate(115, 35)" >OpenVPN</text>
+        <path class="tunnel-ssh" d="M0,50L100,50"></path>
+        <text transform="translate(115, 55)" >SSH Tunnel</text>
+        <path class="tunnel-natpunch" d="M0,70L100,70"></path>
+        <text transform="translate(115, 75)" >NAT Punch (via cloud)</text>
+        <path class="tunnel-iodine" d="M0,90L100,90"></path>
+        <text transform="translate(115, 95)" >Iodine tunnel</text>
+        <path class="tunnel-tor" d="M0,110L100,110"></path>
+        <text transform="translate(115, 115)" >Tor</text>
+        <path class="tunnel-privoxy" d="M0,130L100,130"></path>
+        <text transform="translate(115, 135)" >Privoxy</text>
+        </g>
+      </svg>
+    </div>
     <script type="text/javascript" src="signpost-nettree.js"></script>
   </body>
 </html>

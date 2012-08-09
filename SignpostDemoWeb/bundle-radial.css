@@ -146,33 +146,70 @@ path.arc {
 
 #title {
   position: absolute;
-  font-size:34px;
-  top: 30px;
-  left: 850px;
+  font-size:44px;
+  top: 40px;
+  left: 820px;
   height: 50px;
-  width: 400px;
+  width: 480px;
 }
 
 #logos {
   position: absolute;
-  top: 80px;
-  left: 900px;
-  height: 100px;
+  top: 40px;
+  left: 20px;
+  height: 400px;
+  width: 160px;
 }
 
 #logos img{
-  padding-right: 20px;
+  padding-bottom: 20px;
   width: 150px;
 }
 
+path.tunnel-direct {
+  stroke: #1F76B4;
+  stroke-width: 2px;
+  fill: none;
+}
 path.tunnel-openvpn {
-  stroke: #ff0000;
+  stroke: #0F127D;
   stroke-width: 2px;
   fill: none;
 }
 
 path.tunnel-iodine{
-  stroke: #00ff00;
+  stroke: #73DFAE;
   stroke-width: 2px;
   fill: none;
+}
+
+path.tunnel-natpunch{
+  stroke: #2F33C0;
+  stroke-width: 2px;
+  fill: none;
+}
+
+path.tunnel-tor{
+  stroke: #FF9D1E;
+  stroke-width: 2px;
+  fill: none;
+}
+
+path.tunnel-privoxy{
+  stroke: #A6620A;
+  stroke-width: 2px;
+  fill: none;
+}
+
+path.tunnel-ssh{
+  stroke: #077C47;
+  stroke-width: 2px;
+  fill: none;
+}
+
+
+#legend {
+  position: absolute;
+  left: 20px;
+  bottom: 100px;
 }

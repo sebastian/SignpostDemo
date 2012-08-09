@@ -39,7 +39,7 @@ d3.json("signpost-sigcomm-connections.json", function(tunnelsJson) {
 });
 
 setInterval(function() { 
-  d3.json("signpost-sigcomm-connections.json", function(json) {
+  d3.json("signpost-sigcomm-connections-live.json", function(json) {
     updateTunnels(root = json);
   });
 
@@ -247,6 +247,8 @@ function updateTunnels(tunnels){
   //data and draw links betweent the different positions
   //nodes[i].x, nodes[i].y, nodes[i].name
 
+  console.log(tunnels);
+
   pastClients = nodes.filter(function(d) { return d.type == "client"; });
   newClients = [];
   staleClients = [];
@@ -254,7 +256,7 @@ function updateTunnels(tunnels){
   tunnels.forEach(function (d){
     d.start = nodes.filter(function(nd){ return nd.name == d.client; })[0];
     d.end = nodes.filter(function(nd){ return nd.name == d.server; })[0];
-    if (d.start != null && d.end != null){
+    if (d.start != undefined && d.start != null && d.end != undefined && d.end != null){
       d.tunnelLine = [
         {y: d.start.x, x: d.start.y}, 
         {y: (d.start.x+d.end.x)/2, x: (d.start.y+d.start.y)/2+70}, 
