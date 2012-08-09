@@ -236,7 +236,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			 */
 			while (testAlive){
 				//Ping message
-				long startTime = System.currentTimeMillis();
+				long startTime = System.nanoTime();
 				outToServer.writeBytes(Messages.PING+ "\r\n");
 				if (DEBUG) Log.i(TAG, "C->S"+Messages.PING+ "\r\n");
 				
@@ -244,11 +244,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				//Listen for num bytes from server and estimate latency.
 				in = inFromServer.readLine();
 				int numBytes = Integer.parseInt(in);				
-				long latency = (System.currentTimeMillis()-startTime)*1000/2;							
+				long latency = (System.nanoTime()-startTime)/1000000/2;	// time delta (rtt) in nanoseconds -> miliseconds / 2
 				//notifyActivity(latency, LATENCY_UPSTREAM_ID);
 				
 				Log.i(TAG, "Packet Length (string): "+in+" - Packet Length (int): "+numBytes);
-				long startDownloadTime = System.currentTimeMillis();                
+				long startDownloadTime = System.nanoTime();                
 				//Timer starts now but this value is 
 				//substracted later latency/2 
 				//(not sure why it is done like that in the server)
@@ -263,11 +263,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
                 {
                 	overall += inFromServer.read(data, 0, 1024);                	
                 }
-                long downloadTime = (System.currentTimeMillis() - startDownloadTime)-latency/1000*2;
+                long downloadTime = (System.nanoTime() - startDownloadTime)/1000000-latency*2;
                 Log.i(TAG, "Download time: "+downloadTime);
-                int goodputDownstream = 8*numBytes/(int)downloadTime; //in kbps
+                long goodputDownstream = 8*(long)numBytes/downloadTime; //in kbps (bits per milisecond = kbits per second)
                 if (goodputDownstream<0){
-                	Log.e(TAG, "ERROR!!! GOODPUT<0. Bits: "+8*numBytes+" - Download Time (int) "+(int)downloadTime);
+                	Log.e(TAG, "ERROR!!! GOODPUT<0. Bits: "+8*numBytes+" - Download Time (long) "+downloadTime);
                 }
                 Log.e(TAG, "DOWNSTREAM (kbps): "+goodputDownstream);
                 notifyActivity(goodputDownstream, GOODPUT_DOWNSTREAM_ID);
@@ -287,7 +287,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				notifyActivity(upstreamGoodputInt, GOODPUT_UPSTREAM_ID);
 				
 				if (DEBUG) Log.i(TAG, "Upstream test finished. " + overallUpstream+" bytes sent");	
-				if ((System.currentTimeMillis()-startTest) > 120*1000){
+				if ((System.nanoTime()-startTest) > 120*1000000000){
 					testAlive = false;
 				}
 			}
@@ -341,9 +341,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		    	  try{
 		    	  	//Info sent to server (hostname;timestamp;jitter) + -1 indicating start RTT test
 
-			        long t1 = System.currentTimeMillis();
+			        long t1 = System.nanoTime();
 			        
-		    	  	String p0 = devName+";"+0+";"+t1+";";
+		    	  	String p0 = devName+";"+0+";"+(t1/1000000)+";";
 
 			        byte[] data = p0.getBytes();
 			        DatagramPacket dpSend = new DatagramPacket(data, data.length, server, port);
@@ -352,12 +352,12 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			        /*Wait for server response and client estimate RTT*/
 			        DatagramPacket dpReceive = new DatagramPacket(receiveData, receiveData.length);			         
 			        clientSocket.receive(dpReceive);
-			        long t2 = System.currentTimeMillis();
+			        long t2 = System.nanoTime();
 			        String r1 = new String(dpReceive.getData(), 0, dpReceive.getLength());
 			        
 			        /*Send response to server*/
-			        long t3 = System.currentTimeMillis();			    
-			        String p1 = devName+";"+1+";"+t3+";";
+			        long t3 = System.nanoTime();			    
+			        String p1 = devName+";"+1+";"+(t3/1000000)+";";
 
 			        data = p1.getBytes();
 			        dpSend = new DatagramPacket(data, data.length,server, port);			        
@@ -370,17 +370,17 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			        /*
 			         * Compute jitter and RTT
 			         */
-			        long t4 = System.currentTimeMillis();
+			        long t4 = System.nanoTime();
 			        String r2 = new String(dpReceive.getData(), 0, dpReceive.getLength());
 			        
-			        long rtt=((t4-t3)+(t2-t1))/2;
+			        long rtt=((t4-t3)+(t2-t1))/2/1000000;
 			        String [] serverResp1 = r1.split(";");
 			        String [] serverResp2 = r2.split(";");			        
 			        
 			        long servTimestamp1 = Long.parseLong(serverResp1[2]);
 			        long servTimestamp2 = Long.parseLong(serverResp2[2]);
 			        long deltaRemote = servTimestamp2-servTimestamp1;
-			        long deltaLocal = t3-t1;
+			        long deltaLocal = (t3-t1)/1000000;
 			        
 			        long jitter = Math.abs(deltaLocal-deltaRemote);
 			        notifyActivity((int)rtt*1000, RTT_ID);
