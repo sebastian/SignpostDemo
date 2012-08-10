@@ -199,9 +199,9 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			int UDP_SERVER_PORT = -1;	
 			Socket clientSocket = new Socket(); 
 			byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
-			InetAddress address = InetAddress.getByAddress(ipAddr);
-			InetSocketAddress isockAddress = new InetSocketAddress(address, TCP_PORT);
-			/*Log.i(TAG, "Dev name: "+devName);
+			//InetAddress address = InetAddress.getByAddress(ipAddr);
+			//InetSocketAddress isockAddress = new InetSocketAddress(address, TCP_PORT);
+			Log.i(TAG, "Dev name: "+devName);
 			String serverUrl = "";
 			try{
 				String [] splitName = devName.split("\\.");
@@ -215,7 +215,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			address = InetAddress.getByName(serverUrl);
 			isockAddress = new InetSocketAddress(address, TCP_PORT);
 			Log.i(TAG, "Name for: "+address.getHostAddress());
-			*/
+			
 
 
 
