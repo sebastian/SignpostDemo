@@ -65,10 +65,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 
 	public static InetAddress address = null;
 	
-	//Default values
-	//public static int [] SERVER = {192, 168, 1, 1};
+	//Default values 192.168.142.229
+	public static int [] SERVER = {192, 168, 142, 229};
 
-	//public static int [] SERVER = {10, 20, 1, 118};
+
 	public static int TCP_PORT = 7777;
 	public static int UDP_LOCAL_PORT = 5522;
 	
@@ -154,28 +154,31 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	
 
 	
-	public void notifyActivity (int value, int caseId){
+	public void notifyActivity (long value, int caseId){
 		Intent i = new Intent(this.REFRESH_DATA);
 		String extraVal = null;
 		switch(caseId){
 			case GOODPUT_DOWNSTREAM_ID:
 				extraVal = REFRESH_GOODPUTDOWNSTREAM_INTENT;
+				i.putExtra(extraVal, (float)value/1000.0f);
 				break;
 			case GOODPUT_UPSTREAM_ID:
 				extraVal = REFRESH_GOODPUTUPSTREAM_INTENT;
+				i.putExtra(extraVal, (float)value/1000.0f);
 				break;
 			case RTT_ID:
 				extraVal = REFRESH_RTT_INTENT;
+				i.putExtra(extraVal, (float)value);
 				break;
 			case JITTER_ID:
 				extraVal = REFRESH_JITTER_INTENT;
+				i.putExtra(extraVal, (float)value);
 				break;
 			default:
 				Log.i(TAG, "Unknown value");
 				return;				
 		}
-
-		i.putExtra(extraVal, value);
+		
 		sendBroadcast(i);
 	}
 	
@@ -195,9 +198,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			long startTest = System.currentTimeMillis();
 			int UDP_SERVER_PORT = -1;	
 			Socket clientSocket = new Socket(); 
-			//byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
-			//InetAddress addr = InetAddress.getByAddress(ipAddr);
-			Log.i(TAG, "Dev name: "+devName);
+			byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
+			InetAddress address = InetAddress.getByAddress(ipAddr);
+			InetSocketAddress isockAddress = new InetSocketAddress(address, TCP_PORT);
+			/*Log.i(TAG, "Dev name: "+devName);
 			String serverUrl = "";
 			try{
 				String [] splitName = devName.split("\\.");
@@ -209,9 +213,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			Log.i(TAG, "Server URL: "+serverUrl);
 			InetSocketAddress isockAddress = null;
 			address = InetAddress.getByName(serverUrl);
-			isockAddress = new InetSocketAddress(address, TCP_PORT);	
-
+			isockAddress = new InetSocketAddress(address, TCP_PORT);
 			Log.i(TAG, "Name for: "+address.getHostAddress());
+			*/
+
 
 
 			clientSocket.connect(isockAddress);	
@@ -265,11 +270,15 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
                 }
                 long downloadTime = (System.nanoTime() - startDownloadTime)/1000000-latency*2;
                 Log.i(TAG, "Download time: "+downloadTime);
-                long goodputDownstream = 8*(long)numBytes/downloadTime; //in kbps (bits per milisecond = kbits per second)
+                long goodputDownstream = 8*(long)numBytes/downloadTime; //in Kbps (bits per milisecond = kbits per second)
+
+                Log.e(TAG, "Estimated DOWNSTREAM Goodput (kbps): "+goodputDownstream);
+                
                 if (goodputDownstream<0){
-                	Log.e(TAG, "ERROR!!! GOODPUT<0. Bits: "+8*numBytes+" - Download Time (long) "+downloadTime);
+                	Log.e(TAG, "ERROR!!! DOWNSTREAM GOODPUT<0. Bits: "+8*numBytes+" - Download Time (long) "+downloadTime);
                 }
-                Log.e(TAG, "DOWNSTREAM (kbps): "+goodputDownstream);
+                //Passes data as kbps to the notification activity.
+                //Server is expecting bps
                 notifyActivity(goodputDownstream, GOODPUT_DOWNSTREAM_ID);
 				outToServer.writeBytes(goodputDownstream*1000+ "\r\n"); //Sent to server as bps
 				
@@ -284,10 +293,10 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
                 	overallUpstream+=SEQ_TO_SERVER.length();
                 }
 				int upstreamGoodputInt = Integer.parseInt(inFromServer.readLine())/1000;
-				notifyActivity(upstreamGoodputInt, GOODPUT_UPSTREAM_ID);
+				notifyActivity((long)upstreamGoodputInt, GOODPUT_UPSTREAM_ID);
 				
 				if (DEBUG) Log.i(TAG, "Upstream test finished. " + overallUpstream+" bytes sent");	
-				if ((System.nanoTime()-startTest) > 120*1000000000){
+				if ((System.currentTimeMillis()-startTest) > 120*1000){
 					testAlive = false;
 				}
 			}
@@ -336,14 +345,15 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		      
 		    try {
 				DatagramSocket clientSocket = new DatagramSocket();
+				clientSocket.setSoTimeout(1000);
 
 		      while (testAlive) {
 		    	  try{
 		    	  	//Info sent to server (hostname;timestamp;jitter) + -1 indicating start RTT test
 
-			        long t1 = System.nanoTime();
+			        long t1 = System.currentTimeMillis();
 			        
-		    	  	String p0 = devName+";"+0+";"+(t1/1000000)+";";
+		    	  	String p0 = devName+";"+0+";"+(t1)+";";
 
 			        byte[] data = p0.getBytes();
 			        DatagramPacket dpSend = new DatagramPacket(data, data.length, server, port);
@@ -352,12 +362,13 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			        /*Wait for server response and client estimate RTT*/
 			        DatagramPacket dpReceive = new DatagramPacket(receiveData, receiveData.length);			         
 			        clientSocket.receive(dpReceive);
-			        long t2 = System.nanoTime();
+			        long t2 = System.currentTimeMillis();
 			        String r1 = new String(dpReceive.getData(), 0, dpReceive.getLength());
+			        Log.i(TAG, "Server UDP 1st response: "+r1);
 			        
 			        /*Send response to server*/
-			        long t3 = System.nanoTime();			    
-			        String p1 = devName+";"+1+";"+(t3/1000000)+";";
+			        long t3 = System.currentTimeMillis();			    
+			        String p1 = devName+";"+1+";"+(t3)+";";
 
 			        data = p1.getBytes();
 			        dpSend = new DatagramPacket(data, data.length,server, port);			        
@@ -370,21 +381,21 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			        /*
 			         * Compute jitter and RTT
 			         */
-			        long t4 = System.nanoTime();
+			        long t4 = System.currentTimeMillis();
 			        String r2 = new String(dpReceive.getData(), 0, dpReceive.getLength());
-			        
-			        long rtt=((t4-t3)+(t2-t1))/2/1000000;
+			        Log.i(TAG, "Server UDP 2nd response: "+r2);
+			        long rtt=((t4-t3)+(t2-t1))/2;//ms
 			        String [] serverResp1 = r1.split(";");
 			        String [] serverResp2 = r2.split(";");			        
 			        
 			        long servTimestamp1 = Long.parseLong(serverResp1[2]);
 			        long servTimestamp2 = Long.parseLong(serverResp2[2]);
 			        long deltaRemote = servTimestamp2-servTimestamp1;
-			        long deltaLocal = (t3-t1)/1000000;
+			        long deltaLocal = (t3-t1);//ms
 			        
 			        long jitter = Math.abs(deltaLocal-deltaRemote);
-			        notifyActivity((int)rtt*1000, RTT_ID);
-			        notifyActivity((int)jitter*1000, JITTER_ID);
+			        notifyActivity(rtt, RTT_ID);//send in ms
+			        notifyActivity(jitter, JITTER_ID);//send in ms
 			        
 			        Log.e(TAG, "UDP Measurement. RTT: "+rtt+"\tJitter: "+jitter);			        
 			        long error = System.currentTimeMillis()-t1;
@@ -395,6 +406,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			    }
 			    catch(Exception e){
 			    	Log.e(TAG, "Test failed: "+e.getMessage());
+			    	e.printStackTrace();
 			    }
 		      }
 		      clientSocket.close();
