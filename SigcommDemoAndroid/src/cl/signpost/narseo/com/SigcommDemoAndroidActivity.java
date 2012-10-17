@@ -36,14 +36,11 @@ import uk.ac.cam.cl.dtg.snowdon.*;
 
 public class SigcommDemoAndroidActivity extends Activity implements OnClickListener{
 	
-	private static final String TAG = "SIGPST";
+	private static final String TAG = "SIGN";
 	public PowerManager pm = null;
 	private PowerManager.WakeLock mWakeLock;
 	private static Button startButton = null;
 	private static Button stopButton = null;
-	private static Button rttButton = null;
-	private static Button jitterButton = null;
-	private static Button goodputButton = null;
 	private static TextView errorView = null;
 	//Title for the plot (looks better than adding a label for Y Axis which
 	//is likely to overlap with the tick labels
@@ -55,7 +52,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 
 
 	//Used to inform which one is the current active plot
-	private static int currentPlot = 0;
+	private static int currentPlot = 2;
 	private static final int PLOT_RTT = 0;
 	private static final int PLOT_JITTER = 1;
 	private static final int PLOT_GOODPUT = 2;
@@ -144,12 +141,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         startButton.setOnClickListener(this);   
         stopButton =(Button) findViewById(R.id.stopTest);        
         stopButton.setOnClickListener(this);  
-        rttButton =(Button) findViewById(R.id.rtt);        
-        rttButton.setOnClickListener(this);  
-        jitterButton =(Button) findViewById(R.id.jitter);        
-        jitterButton.setOnClickListener(this); 
-        goodputButton =(Button) findViewById(R.id.goodput);        
-        goodputButton.setOnClickListener(this); 
         
         
 
@@ -163,7 +154,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         	timestampRtt [i] = 0.0f;
         	timestampJitter [i] = 0.0f;
         }
-        title.setText("RTT (ms)");        
+        title.setText("Goodput (Mbps)");        
 
         graph = (GraphView) findViewById(R.id.graph);
         
@@ -276,21 +267,6 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	    			Log.i(TAG, "ERROR UNBINDING SERVICE: "+e.getMessage());
 	    		}
 	    		this.finish();
-	    		break;
-	    	//Show RTT plot
-	    	case R.id.rtt:
-	    		currentPlot=PLOT_RTT;
-	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
-	    		break;
-	    	//Show JITTER plot
-	    	case R.id.jitter:
-	    		currentPlot=PLOT_JITTER;
-	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
-	    		break;
-	    	//Show Goodput (uplink/downlink) plot
-	    	case R.id.goodput:
-	    		currentPlot=PLOT_GOODPUT;
-	    		Log.i(TAG, "CURRENT PLOT: "+currentPlot);
 	    		break;
 	    	default:
 	    		Log.i(TAG, "ERROR");
@@ -414,7 +390,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
 	                    graph.setYLabelPositions(yTicksPosition);        
 	                    graph.setXLabels(xTicksLabelsTime);
 	                    graph.setXLabelPositions(xTicksPosGoodput);	                    
-	            		plot(timestampDownstreamBandwidth, smoothSignal(arrayDownstreamBandwidth, 4), timestampUpstreamBandwidth, smoothSignal(arrayUpstreamBandwidth,4), minXAxisGoodput, maxXAxisGoodput);                	
+	            		plotGoodput(timestampDownstreamBandwidth, smoothSignal(arrayDownstreamBandwidth, 4), minXAxisGoodput, maxXAxisGoodput);                	
 	            		break;
             	}
             }
@@ -499,7 +475,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     }
     
     public float[] smoothSignal(float [] array, int windowSize){
-    	Log.i(TAG, "Smoothing signal");
+    	//Log.i(TAG, "Smoothing signal");
     	float [] smoothSignal = new float[array.length];
     	for (int i=0; i<array.length; i++){
     		if (i<windowSize){
@@ -516,13 +492,13 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     			}
     			smoothSignal[i] = aggregateVal/(float)windowSize;    			
     		}
-        	Log.i(TAG, "Smoothing signal: "+i+" Original "+array[i]+" Smoothed "+smoothSignal[i]);
+        	//Log.i(TAG, "Smoothing signal: "+i+" Original "+array[i]+" Smoothed "+smoothSignal[i]);
     	}
     	return smoothSignal;
     }
     
     public float[] smoothSignal(float [] array){
-    	Log.i(TAG, "Smoothing signal");
+    	//Log.i(TAG, "Smoothing signal");
     	float [] smoothSignal = new float[array.length];
     	for (int i=0; i<array.length; i++){
     		if (i<SMOOTH_WINDOW){
@@ -539,7 +515,7 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
     			}
     			smoothSignal[i] = aggregateVal/(float)SMOOTH_WINDOW;    			
     		}
-        	Log.i(TAG, "Smoothing signal: "+i+" Original "+array[i]+" Smoothed "+smoothSignal[i]);
+        	//Log.i(TAG, "Smoothing signal: "+i+" Original "+array[i]+" Smoothed "+smoothSignal[i]);
     	}
     	return smoothSignal;
     }
@@ -647,6 +623,58 @@ public class SigcommDemoAndroidActivity extends Activity implements OnClickListe
         graph.redraw();
     }
 
+    /*
+     * Plots goodput (bi-dimensional)
+     */
+    public void plotGoodput (float [] timestamps, float [] values, float minX, float maxX){
+    	float[][] data1 = {timestamps, values};
+        
+        //Set x-axis values
+        //Needs to get the minimum for the timestamp as the measurements are not sync-ed
+        float midTime = (maxX-minX)/2.0f+minX;
+        float mid = (float)Math.round(midTime*10)/10;
+        float firstquarterTime = (float)Math.round(((midTime-minX)/2.0f+minX)*10)/10;
+        float secondquarterTime = (float)Math.round(((maxX-midTime)/2.0f+midTime)*10)/10;
+        float max = (float)Math.round(maxX*10)/10;
+        float min = (float)Math.round(minX*10)/10;
+        
+
+        //Get maximum from arrays
+        float maxArray = getMax(values);
+        maxValGoodputYAxis = Math.max(maxArray, maxValGoodputYAxis);
+
+        float maxYVal = (float)Math.round(maxValGoodputYAxis*1.2f*10)/10;
+        float midYVal = (float)Math.round(maxYVal*0.5f*10)/10;
+        float firstquarterYVal = (float)Math.round(maxYVal*0.25f*10)/10;
+        float secondquarterYVal = (float)Math.round(maxYVal*0.75f*10)/10;
+        
+        String [] xTicksLabelsLatency = new String []{String.valueOf(min), String.valueOf(firstquarterTime), String.valueOf(mid), String.valueOf(secondquarterTime), String.valueOf(max)};
+        float [] xTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        String [] yTicksLabelsLatency = new String []{String.valueOf(0.0f), String.valueOf(firstquarterYVal), String.valueOf(midYVal), String.valueOf(secondquarterYVal), String.valueOf(maxYVal)};
+        float [] yTicksPosLatency = new float []{0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+
+        /* 
+         * THIS IS WHERE SMOOTHING CAN BE DONE. SUBSTITUTE ORIGINAL ARRAY
+         * BY AN SMOOTHED ONE
+         */
+        graph.setXLabels(xTicksLabelsLatency);
+        graph.setXLabelPositions(xTicksPosLatency);
+        graph.setYLabels(yTicksLabelsLatency);
+        graph.setYLabelPositions(yTicksPosLatency);
+        
+        graph.redraw();
+
+        graph.setData(new float[][][]{data1}, minX,  timestamps[timestamps.length-1], 0.0f, maxYVal);
+
+
+        //graph.setData(new float[][][]{data1}, minX,  Math.min(timestamps[timestamps.length-1],timestamps2[timestamps2.length-1]), 0.0f, maxYVal);
+        //graph.addData(data2, minX, Math.min(timestamps[timestamps.length-1], timestamps2[timestamps2.length-1]), 0.0f,maxYVal);
+
+    }
+    
+    
+    
     /*
      * Plots goodput (bi-dimensional)
      */

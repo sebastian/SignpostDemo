@@ -4,47 +4,7 @@
       android:layout_height="fill_parent"
       android:orientation="vertical" >
   
-     	        <TableLayout
-		        android:id="@+id/tableLayoutTop"
-		        android:layout_width="fill_parent"
-		        android:layout_height="wrap_content" 
-		        android:stretchColumns="*"
-		        android:paddingTop="4px">
-		        
-		        <TableRow
-		            android:id="@+id/tableRow0"
-		            android:layout_width="fill_parent"
-		            android:layout_height="wrap_content" >
-		            
-					<Button
-					    android:id="@+id/rtt"
-					    android:layout_height="wrap_content"
-					    android:layout_width="0dip"
-					    android:layout_weight="1"
-					    android:layout_column="0"
-					    android:gravity="center_horizontal"
-					    android:text="RTT" />
-				
-				    <Button
-				        android:id="@+id/jitter"
-					    android:layout_height="wrap_content"
-					    android:layout_width="0dip"
-					    android:layout_weight="1"
-				        android:layout_column="1"
-				        android:gravity="center_horizontal"
-				        android:text="Jitter" />
-				    
-				    <Button
-				        android:id="@+id/goodput"
-					    android:layout_height="wrap_content"
-					    android:layout_width="0dip"
-					    android:layout_weight="1"
-				        android:layout_column="2"
-					    android:gravity="center_horizontal"
-				        android:text="Goodput" />
-		        </TableRow>
-		        
-		  	</TableLayout>
+
 
             <TextView
                 android:id="@+id/title"

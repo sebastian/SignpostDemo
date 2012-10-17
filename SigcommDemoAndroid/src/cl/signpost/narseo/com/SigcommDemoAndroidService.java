@@ -25,7 +25,7 @@ import android.widget.Toast;
 
 public class SigcommDemoAndroidService extends Service implements Runnable{
 
-	public static final String TAG = "SIGNPOSTSERV";
+	public static final String TAG = "SIGN";
 	private static SigcommDemoAndroidActivity MAIN_ACTIVITY;
 	private static PowerManager.WakeLock wl = null;
 	private static PowerManager pm =null;
@@ -66,8 +66,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 	public static InetAddress address = null;
 	
 	//Default values 192.168.142.229
-	public static int [] SERVER = {192, 168, 142, 229};
-
+	public static int [] SERVER = {10, 7, 0, 41};
 
 	public static int TCP_PORT = 7777;
 	public static int UDP_LOCAL_PORT = 5522;
@@ -198,9 +197,11 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			long startTest = System.currentTimeMillis();
 			int UDP_SERVER_PORT = -1;	
 			Socket clientSocket = new Socket(); 
-			byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
+			//byte[] ipAddr = new byte[]{(byte) SERVER[0], (byte) SERVER[1], (byte) SERVER[2], (byte) SERVER[3]};
+			
 			//InetAddress address = InetAddress.getByAddress(ipAddr);
 			//InetSocketAddress isockAddress = new InetSocketAddress(address, TCP_PORT);
+			
 			Log.i(TAG, "Dev name: "+devName);
 			String serverUrl = "";
 			try{
@@ -232,8 +233,8 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 			
 
 			//Starting UDP receiver and sender thread (non-blocking)
-		    SenderThread sender = new SenderThread(address, UDP_SERVER_PORT);
-		    sender.start();
+		    //SenderThread sender = new SenderThread(address, UDP_SERVER_PORT);
+		    //sender.start();
 		    
 			/*
 			 * TCP Latency measurement is deprecated but still done.
@@ -248,11 +249,13 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				
 				//Listen for num bytes from server and estimate latency.
 				in = inFromServer.readLine();
-				int numBytes = Integer.parseInt(in);				
-				long latency = (System.nanoTime()-startTime)/1000000/2;	// time delta (rtt) in nanoseconds -> miliseconds / 2
+				long numBytes = Long.parseLong(in);	
+				Log.i(TAG, "NUM Bytes - (server specified): "+numBytes);
+				long latency = (System.nanoTime()-startTime)/(long)1000000;	// time delta (rtt) in nanoseconds -> miliseconds / 2
 				//notifyActivity(latency, LATENCY_UPSTREAM_ID);
 				
 				Log.i(TAG, "Packet Length (string): "+in+" - Packet Length (int): "+numBytes);
+				
 				long startDownloadTime = System.nanoTime();                
 				//Timer starts now but this value is 
 				//substracted later latency/2 
@@ -268,19 +271,22 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
                 {
                 	overall += inFromServer.read(data, 0, 1024);                	
                 }
-                long downloadTime = (System.nanoTime() - startDownloadTime)/1000000-latency*2;
+                long deltaTime = System.nanoTime() - startDownloadTime;
+                long downloadTime = deltaTime/(long)1000000;
+                //long downloadTime = deltaTime/(long)1000000-latency/(long)2;
                 Log.i(TAG, "Download time: "+downloadTime);
-                long goodputDownstream = 8*(long)numBytes/downloadTime; //in Kbps (bits per milisecond = kbits per second)
+                long goodputDownstream = (long)8*(long)numBytes/downloadTime; //in Kbps (bits per milisecond = kbits per second)
 
                 Log.e(TAG, "Estimated DOWNSTREAM Goodput (kbps): "+goodputDownstream);
                 
                 if (goodputDownstream<0){
+                	Log.e(TAG, "DELTA: "+deltaTime+" Latency: "+latency);
                 	Log.e(TAG, "ERROR!!! DOWNSTREAM GOODPUT<0. Bits: "+8*numBytes+" - Download Time (long) "+downloadTime);
                 }
                 //Passes data as kbps to the notification activity.
                 //Server is expecting bps
                 notifyActivity(goodputDownstream, GOODPUT_DOWNSTREAM_ID);
-				outToServer.writeBytes(goodputDownstream*1000+ "\r\n"); //Sent to server as bps
+				outToServer.writeBytes(goodputDownstream*(long)1000+ "\r\n"); //Sent to server as bps
 				
 				//Wait for server latency
 				int serverLatencyInt = Integer.parseInt(inFromServer.readLine());
@@ -296,7 +302,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 				notifyActivity((long)upstreamGoodputInt, GOODPUT_UPSTREAM_ID);
 				
 				if (DEBUG) Log.i(TAG, "Upstream test finished. " + overallUpstream+" bytes sent");	
-				if ((System.currentTimeMillis()-startTest) > 120*1000){
+				if ((System.currentTimeMillis()-startTest) > (long)10*(long)1000){
 					testAlive = false;
 				}
 			}
@@ -305,6 +311,7 @@ public class SigcommDemoAndroidService extends Service implements Runnable{
 		}
 		catch(Exception e){
 			Log.i(TAG, "EXCEPTION OPENING CONNECTION: "+e.getMessage());
+			e.printStackTrace();
 			notifyErrorActivity("SERVER NOT AVAILABLE");
 		}
 		stopThread();

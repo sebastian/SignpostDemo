@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Enter your (DNS) name:"
-        android:height="46dp"
+        android:height="76dp"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="#000000" 
         android:paddingTop="15px" 
